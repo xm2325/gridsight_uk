@@ -1,4 +1,4 @@
-name: v2.3 Online YOLOE-26 Fast Showcase
+name: v2.4 Online YOLOE-26 Hierarchical Showcase
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: v23-fast-showcase-${{ github.ref }}
+  group: v24-hierarchical-showcase-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -17,9 +17,9 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
 
 jobs:
-  yoloe-fast-showcase:
+  yoloe-hierarchical-showcase:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -49,16 +49,21 @@ jobs:
           shutil.copy2(src, Path('weights')/src.name)
           PY
           sha256sum weights/yoloe-26n-seg.pt
-      - name: Run genuine YOLOE-26 zero-shot text-prompt segmentation
+      - name: Run single-pass YOLOE baseline
         run: python scripts/v23_yoloe_zero_shot.py
+      - name: Run hierarchical tower-ROI to component YOLOE experiment
+        run: python scripts/v24_yoloe_hierarchical.py
       - uses: actions/upload-artifact@v4
         with:
-          name: v23-yoloe-fast-showcase
+          name: v24-yoloe-hierarchical-showcase
           path: |
             data/images/test/POS_2326530.jpg
             reports/v2_3_showcase_image_download.json
             reports/v2_3_yoloe26_zero_shot_POS_2326530.jpg
             reports/v2_3_yoloe26_zero_shot_predictions.json
+            reports/v2_4_yoloe_tower_roi_POS_2326530.jpg
+            reports/v2_4_yoloe_hierarchical_POS_2326530.jpg
+            reports/v2_4_yoloe_hierarchical_metrics.json
             weights/yoloe-26n-seg.pt
           if-no-files-found: error
           compression-level: 0
