@@ -1,0 +1,37 @@
+{
+  "evidence_type": "v4.1-morphology-diverse-validation-summary",
+  "github_actions": {
+    "run_id": 32105242496,
+    "artifact_id": 9313002679,
+    "artifact_name": "v41-morphology-diverse-validation",
+    "artifact_digest": "sha256:e5deb527d447ffb6bedbcbc95741fc177e5e56e53c9098e1da13678f10a07f45",
+    "conclusion": "success"
+  },
+  "dataset": {
+    "split_release_sha256": "6fea4b65577e616be236b1bda18e889a45d74a8e7a6bdcdc2f93d5f942a7828c",
+    "train_sources": 11,
+    "train_insulators": 60,
+    "validation_sources": 2,
+    "validation_insulators": 12,
+    "v4_final_holdout_visible_to_model": false,
+    "v4_final_ids": ["POS_8091164", "POS_8239540"]
+  },
+  "yoloe26n_text": {
+    "checkpoint_sha256": "1741c1f8da3cea47e2c01829c334a50dc0b9bbd05e685b90a3ce84fae32c8c1b",
+    "tower_iou": {"POS_354803":0.8998241638101304,"POS_543992":0.7396838559872487},
+    "raw_candidate_counts": {"POS_354803":51,"POS_543992":38},
+    "selected_iou_0_30": {"tp":0,"fp":0,"fn":12,"precision":0.0,"recall":0.0,"f1":0.0}
+  },
+  "yolo26n_full_image_finetune": {
+    "pretrained_checkpoint": "yolo26n.pt",
+    "best_checkpoint_sha256": "07f015a29442d4cd59a40b6e0e509d23cb900fd2d2302be4e5d43a304bb99db0",
+    "epochs_requested": 30,
+    "imgsz": 960,
+    "selected_score_threshold": 0.02,
+    "iou_0_30": {"tp":1,"fp":0,"fn":11,"precision":1.0,"recall":0.08333333333333333,"f1":0.15384615384615385},
+    "iou_0_50": {"tp":0,"fp":1,"fn":12,"precision":0.0,"recall":0.0,"f1":0.0},
+    "training_mAP50": 0.00425
+  },
+  "engineering_interpretation": "The morphology-diverse split is valid and the final holdout remained untouched, but full-image component localisation remains scale-limited. The next preregistered development step is a tower-ROI component specialist with oracle-parent and model-parent validation reported separately; no v4 final image will be used for this decision.",
+  "claim_boundary": "Two assistant-provisional validation sources only. These are exploratory model-selection results, not production performance. No material, condition, corrosion, defect, failure or safety-risk claim."
+}
