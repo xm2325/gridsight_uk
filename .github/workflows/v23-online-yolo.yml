@@ -1,4 +1,4 @@
-name: v3.9 Post-Final Holdout Evidence Lock
+name: v3.9 Post-Final Generalization Audit
 
 on:
   pull_request:
@@ -9,11 +9,11 @@ permissions:
   contents: read
 
 concurrency:
-  group: v39-post-final-lock-${{ github.ref }}
+  group: v39-post-final-audit-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  post-final-lock:
+  post-final-audit:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -21,18 +21,31 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Verify final-holdout contracts remain frozen
+      - name: Install audit-only dependency
+        run: python -m pip install 'numpy>=2,<3'
+      - name: Verify final-holdout contracts and persisted one-shot evidence
         shell: bash
         run: |
           test -f data/final_holdout/final_holdout_freeze.json
           test -f data/final_holdout/champion_freeze_v38.json
-          grep -q '"frozen_before_final_holdout_inference": true' data/final_holdout/champion_freeze_v38.json
-          grep -q '"post_evaluation_rule"' data/final_holdout/champion_freeze_v38.json
+          test -f reports/v3_8_final_holdout_summary.json
+          grep -q '"no_further_tuning_permitted": true' reports/v3_8_final_holdout_summary.json
+          grep -q '"headline_claim_ready": false' reports/v3_8_final_holdout_summary.json
       - name: Enforce no automatic final-holdout inference after v3.8
         shell: bash
         run: |
-          if grep -R "v38_final_holdout_eval.py" .github/workflows; then
+          if grep -R "python scripts/v38_final_holdout_eval.py" .github/workflows; then
             echo 'ERROR: post-final workflows must not automatically re-run the frozen holdout evaluator.' >&2
             exit 1
           fi
-          echo 'Final holdout is locked. Further commits may analyze frozen results but may not tune or re-run them as final evidence.'
+      - name: Run label-only morphology-shift audit
+        run: python scripts/v39_post_final_morphology_audit.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v39-post-final-generalization-audit
+          path: |
+            reports/v3_8_final_holdout_summary.json
+            reports/v3_9_morphology_shift.json
+            reports/v3_9_morphology_shift.md
+          if-no-files-found: error
+          retention-days: 90
