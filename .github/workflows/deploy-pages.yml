@@ -48,19 +48,28 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.11.15'
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6
-      - name: Cache SigLIP2 checkpoint
+      - name: Cache pinned SigLIP2 checkpoint/runtime
         uses: actions/cache@v4
         with:
           path: .hf-cache
-          key: ${{ runner.os }}-siglip2-base-patch16-naflex-v1
-      - name: Install CPU inference runtime
+          key: ${{ runner.os }}-siglip2-naflex-torch2.13.0-transformers4.57.6-v1
+      - name: Install pinned CPU inference runtime
         shell: bash
         run: |
-          python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
-          python -m pip install 'transformers>=4.49,<5' 'sentencepiece>=0.2' 'safetensors>=0.4' 'Pillow>=10,<13'
+          python -m pip install 'torch==2.13.0+cpu' 'torchvision==0.28.0+cpu' --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install 'transformers==4.57.6' 'sentencepiece==0.2.2' 'safetensors==0.8.0' 'Pillow==12.3.0'
+          python - <<'PY'
+          import PIL, torch, transformers
+          print('torch', torch.__version__)
+          print('transformers', transformers.__version__)
+          print('Pillow', PIL.__version__)
+          assert torch.__version__ == '2.13.0+cpu'
+          assert transformers.__version__ == '4.57.6'
+          assert PIL.__version__ == '12.3.0'
+          PY
       - name: Hydrate seven legacy frozen source images
         run: python scripts/v23_download_frozen_images.py
       - name: Hydrate six v2.9 morphology and holdout sources
@@ -88,7 +97,7 @@ jobs:
         run: python scripts/v49_build_case_study_explorer.py
       - name: Promote all 16 sources to the primary gallery
         run: python scripts/v50_promote_full_gallery.py
-      - name: Verify Pages payload
+      - name: Verify Pages payload and deployment marker
         shell: bash
         run: |
           test -s _site/index.html
@@ -102,6 +111,7 @@ jobs:
           grep -q 'Case-study explorer' _site/index.html
           grep -q 'unspent frozen holdout' _site/index.html
           grep -q 'Open case study' _site/index.html
+          grep -q 'v4.11-primary-16-gallery' _site/index.html
           grep -q 'offline.html' _site/index.html
           if grep -q 'Three source images, three tower configurations' _site/index.html; then
             echo 'ERROR: old three-image gallery is still present.' >&2
@@ -131,9 +141,12 @@ jobs:
               raise SystemExit('Gallery anchor was not promoted cleanly')
           if text.count('class="case-open"') != 16:
               raise SystemExit('Expected one case-study button per gallery card')
+          if text.count('v4.11-primary-16-gallery') != 2:
+              raise SystemExit('Build marker missing from meta/footer')
           if cases['cases']['POS_7630781']['metrics'][-1]['value'] != 'NOT RUN':
               raise SystemExit('Unspent detection holdout must remain unrun')
           print(f'index.html: {p.stat().st_size:,} bytes')
+          print('build marker: v4.11-primary-16-gallery')
           print('primary gallery: 16/16 source cards')
           print(f'legacy verified Commons originals: {manifest["legacy_verified_commons_originals"]}/7')
           print(f'case studies: {cases["case_count"]} / featured {len(cases["featured"])}')
