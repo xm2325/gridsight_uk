@@ -13,6 +13,7 @@ on:
       - 'scripts/v46_build_pages_site.py'
       - 'scripts/v48_build_full_dataset_gallery.py'
       - 'scripts/v49_build_case_study_explorer.py'
+      - 'scripts/v50_promote_full_gallery.py'
       - 'configs/v46_siglip2_material_crop_protocol.json'
       - 'data/image_sources.json'
       - 'data/final_holdout/final_holdout_freeze.json'
@@ -85,29 +86,32 @@ jobs:
         run: python scripts/v48_build_full_dataset_gallery.py
       - name: Add dataset-to-decision case-study explorer
         run: python scripts/v49_build_case_study_explorer.py
+      - name: Promote all 16 sources to the primary gallery
+        run: python scripts/v50_promote_full_gallery.py
       - name: Verify Pages payload
         shell: bash
         run: |
           test -s _site/index.html
           test -s _site/offline.html
-          test -s _site/assets/POS_2952166.jpg
-          test -s _site/assets/POS_8090535.jpg
-          test -s _site/assets/POS_7630781.jpg
           test -s _site/assets/dataset/cases.json
           grep -q '<svg id="overlay"' _site/index.html
-          grep -q 'Tower gallery' _site/index.html
-          grep -q 'Magnified prediction crops' _site/index.html
-          grep -q 'All 16 source images' _site/index.html
+          grep -q 'Full source gallery · all 16 images' _site/index.html
+          grep -q 'Gallery · 16' _site/index.html
+          grep -q 'All 16 project source images' _site/index.html
           grep -q 'Data provenance contract' _site/index.html
           grep -q 'Case-study explorer' _site/index.html
-          grep -q 'Every source has a reason to exist' _site/index.html
           grep -q 'unspent frozen holdout' _site/index.html
           grep -q 'Open case study' _site/index.html
           grep -q 'offline.html' _site/index.html
+          if grep -q 'Three source images, three tower configurations' _site/index.html; then
+            echo 'ERROR: old three-image gallery is still present.' >&2
+            exit 1
+          fi
           python - <<'PY'
           import json
           from pathlib import Path
           p=Path('_site/index.html')
+          text=p.read_text()
           if p.stat().st_size > 420_000:
               raise SystemExit(f'index.html too large: {p.stat().st_size}')
           detail=sorted(Path('_site/assets').glob('POS_*_detail_*.webp'))
@@ -121,16 +125,18 @@ jobs:
               raise SystemExit(f'Expected 16 full + 16 thumb dataset images, found {len(full)} + {len(thumbs)}')
           if manifest['unique_source_images'] != 16 or cases['case_count'] != 16:
               raise SystemExit('Dataset or case-study source count is not 16')
-          if p.read_text().count('class="case-open"') != 16:
-              raise SystemExit('Expected one case-study button per dataset card')
+          if text.count('class="dataset-card"') != 16:
+              raise SystemExit('Primary gallery does not contain 16 source cards')
+          if text.count('<section id="gallery"') != 1 or '<section id="dataset">' in text:
+              raise SystemExit('Gallery anchor was not promoted cleanly')
+          if text.count('class="case-open"') != 16:
+              raise SystemExit('Expected one case-study button per gallery card')
           if cases['cases']['POS_7630781']['metrics'][-1]['value'] != 'NOT RUN':
               raise SystemExit('Unspent detection holdout must remain unrun')
           print(f'index.html: {p.stat().st_size:,} bytes')
+          print('primary gallery: 16/16 source cards')
           print(f'legacy verified Commons originals: {manifest["legacy_verified_commons_originals"]}/7')
           print(f'case studies: {cases["case_count"]} / featured {len(cases["featured"])}')
-          print(f'detail crops: {len(detail)} / {sum(x.stat().st_size for x in detail):,} bytes')
-          print(f'dataset thumbs: {len(thumbs)} / {sum(x.stat().st_size for x in thumbs):,} bytes')
-          print(f'dataset full images: {len(full)} / {sum(x.stat().st_size for x in full):,} bytes')
           PY
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
