@@ -1,4 +1,4 @@
-name: v4.0 Morphology-Diverse Acquisition Audit
+name: v4.1 YOLOE Annotation-Aid Proposals
 
 on:
   pull_request:
@@ -9,49 +9,79 @@ permissions:
   contents: read
 
 concurrency:
-  group: v40-morphology-acquisition-${{ github.ref }}
+  group: v41-annotation-aid-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  PYTHONUNBUFFERED: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
 jobs:
-  acquire-and-audit:
+  yoloe-annotation-aid:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Preserve retired final-holdout lock
+          cache: pip
+          cache-dependency-path: requirements-yolo.txt
+      - name: Preserve retired v3.8 holdout lock
         shell: bash
         run: |
           test -f data/final_holdout/final_holdout_freeze.json
           test -f data/final_holdout/champion_freeze_v38.json
-          test -f reports/v3_8_final_holdout_summary.json
           grep -q '"no_further_tuning_permitted": true' reports/v3_8_final_holdout_summary.json
           if grep -RE "python[[:space:]].*v38_final_holdout.*\.py" .github/workflows; then
-            echo 'ERROR: retired v3.8 holdout evaluator must not be reachable from v4 workflows.' >&2
+            echo 'ERROR: retired holdout evaluator reachable from v4 workflow.' >&2
             exit 1
           fi
-          echo 'Retired v3.8 holdout remains locked.'
-      - name: Install image audit dependency
-        run: python -m pip install 'Pillow>=10,<13'
-      - name: Acquire four pre-existing non-holdout morphology candidates
-        run: python scripts/v40_acquire_morphology_candidates.py
-      - name: Verify candidate-only evidence boundary
+      - name: Install CPU PyTorch
+        run: python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
+      - name: Install Ultralytics, CLIP and image dependencies
         shell: bash
         run: |
-          grep -q '"model_inference_performed": false' reports/v4_0_morphology_candidate_manifest.json
-          grep -q '"count": 4' reports/v4_0_morphology_candidate_manifest.json
-          test -f reports/v4_0_morphology_contact_sheet.jpg
-          ! grep -q 'POS_3437435' reports/v4_0_morphology_candidate_manifest.json
-          ! grep -q 'POS_7561805' reports/v4_0_morphology_candidate_manifest.json
+          python -m pip install -r requirements-yolo.txt
+          python -m pip install 'git+https://github.com/ultralytics/CLIP.git'
+      - name: Re-acquire candidate pixels selected before model inference
+        run: python scripts/v40_acquire_morphology_candidates.py
+      - name: Verify pixel-review decision was committed before proposals
+        shell: bash
+        run: |
+          test -f reports/v4_0_pixel_review.json
+          grep -q '"record_id": "POS_6610209"' reports/v4_0_pixel_review.json
+          grep -q '"decision": "accept_new_training_morphology_stratum"' reports/v4_0_pixel_review.json
+          grep -q '"record_id": "POS_8091164"' reports/v4_0_pixel_review.json
+          grep -q '"decision": "accept_new_validation_candidate"' reports/v4_0_pixel_review.json
+      - name: Download and hash official YOLOE-26n-seg checkpoint
+        shell: bash
+        run: |
+          mkdir -p weights
+          python - <<'PY'
+          from pathlib import Path
+          from ultralytics import YOLOE
+          import shutil
+          name='yoloe-26n-seg.pt'
+          m=YOLOE(name); del m
+          src=Path(name)
+          if not src.exists(): raise SystemExit(f'missing {name}')
+          shutil.copy2(src,Path('weights')/name)
+          PY
+          echo '1741c1f8da3cea47e2c01829c334a50dc0b9bbd05e685b90a3ce84fae32c8c1b  weights/yoloe-26n-seg.pt' | sha256sum -c -
+      - name: Generate low-threshold component proposals for annotation review only
+        run: python scripts/v41_yoloe_annotation_aid.py
       - uses: actions/upload-artifact@v4
         with:
-          name: v40-morphology-candidates
+          name: v41-yoloe-annotation-aid
           path: |
-            reports/v4_0_morphology_candidate_manifest.json
-            reports/v4_0_morphology_contact_sheet.jpg
-            reports/v4_0_morphology_candidates/*.jpg
+            reports/v4_1_yoloe_annotation_aid.json
+            reports/v4_1_POS_6610209_tower_roi.jpg
+            reports/v4_1_POS_6610209_annotation_aid.jpg
+            reports/v4_1_POS_8091164_tower_roi.jpg
+            reports/v4_1_POS_8091164_annotation_aid.jpg
+            reports/v4_0_morphology_candidates/POS_6610209.jpg
+            reports/v4_0_morphology_candidates/POS_8091164.jpg
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
