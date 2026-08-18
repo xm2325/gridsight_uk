@@ -1,30 +1,28 @@
-name: v2.7 Source-Diversity YOLO26 Component Ablation
+name: v2.8 Validation-Selected Tiled Component Inference
 
 on:
   pull_request:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      epochs:
-        description: "Controlled source-diversity ablation epochs"
-        required: false
-        default: "80"
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
-  group: v27-source-diversity-${{ github.ref }}
+  group: v28-val-selected-tiled-${{ github.ref }}
   cancel-in-progress: true
 
 env:
   PYTHONUNBUFFERED: "1"
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  V25_RUN_ID: "32087749320"
+  V27_RUN_ID: "32088489393"
 
 jobs:
-  five-source-component-ablation:
+  val-selected-tiled-inference:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -32,46 +30,37 @@ jobs:
           python-version: "3.11"
           cache: pip
           cache-dependency-path: requirements-yolo.txt
-      - name: Hydrate seven UK tower sources through Geograph direct derivatives
+      - name: Hydrate current train/val/development imagery from Geograph
         run: python scripts/v23_download_frozen_images.py
-      - name: Validate fixed 5 train / 1 val / 1 test and 77-box contract
+      - name: Validate current 5 train / 1 val / 1 development contract
         run: python scripts/v23_validate_pack.py
       - name: Install CPU PyTorch
         run: python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
       - name: Install Ultralytics stack
         run: python -m pip install -r requirements-yolo.txt
-      - name: Download official pretrained YOLO26n and YOLOE-26n-seg checkpoints
-        shell: bash
-        run: |
-          mkdir -p weights
-          python - <<'PY'
-          from pathlib import Path
-          from ultralytics import YOLO, YOLOE
-          import shutil
-          for name, cls in [('yolo26n.pt', YOLO), ('yoloe-26n-seg.pt', YOLOE)]:
-              m=cls(name); del m
-              src=Path(name)
-              if not src.exists(): raise SystemExit(f'Ultralytics did not materialize {name}')
-              shutil.copy2(src, Path('weights')/name)
-          PY
-          sha256sum weights/*.pt
-      - name: Re-run same tower-crop YOLO26 family with 5 independent training towers
-        env:
-          EPOCHS: ${{ github.event_name == 'workflow_dispatch' && inputs.epochs || '80' }}
-        run: python scripts/v27_source_diversity_detector.py --epochs "$EPOCHS"
-      - uses: actions/upload-artifact@v4
+      - name: Download frozen v2.5 three-source model artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: v25-yoloe-yolo26-component-hybrid
+          path: prior-v25
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ env.V25_RUN_ID }}
+      - name: Download frozen v2.7 five-source model artifact
+        uses: actions/download-artifact@v4
         with:
           name: v27-source-diversity-component-ablation
+          path: prior-v27
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ env.V27_RUN_ID }}
+      - name: Select model, tile geometry, confidence and NMS only on validation source
+        run: python scripts/v28_val_selected_tiled_inference.py --v25-root prior-v25 --v27-root prior-v27
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v28-validation-selected-tiled-inference
           path: |
-            reports/v2_3_frozen_image_download.json
-            reports/v2_7_pack_validation.json
-            reports/v2_7_source_diversity_POS_2326530.jpg
-            reports/v2_7_source_diversity_metrics.json
-            data/v27_component_crop/data.yaml
-            runs/v2_7_yolo26n_component_crop_5sources/results.csv
-            runs/v2_7_yolo26n_component_crop_5sources/weights/*.pt
-            weights/yolo26n.pt
-            weights/yoloe-26n-seg.pt
+            reports/v2_8_val_tower_crop.jpg
+            reports/v2_8_dev_yoloe_tower_crop.jpg
+            reports/v2_8_val_selected_tiled_POS_2326530.jpg
+            reports/v2_8_val_selected_tiled_metrics.json
           if-no-files-found: error
-          compression-level: 0
           retention-days: 30
