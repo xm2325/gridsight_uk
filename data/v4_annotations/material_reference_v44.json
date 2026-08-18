@@ -1,0 +1,44 @@
+{
+  "version": "v4.4-source-assisted-material-reference",
+  "ontology": {
+    "binary_task_classes": ["glass", "ceramic_family"],
+    "ceramic_family_note": "Cross-source family label used because POS_8090535 source text describes older brown-glazed porcelain while POS_2952166 source text says ceramic. The project does not silently assert that every ceramic-labelled source is specifically porcelain.",
+    "component_unit": "visible overhead-line insulator assembly; parallel strings serving one phase attachment are boxed as one visible assembly when they form one contiguous visual unit"
+  },
+  "annotation_provenance": "Boxes were manually drawn after direct pixel review. Material labels are source-assisted and visually corroborated by the left/right colour/translucency mapping described on each public source page. They are not laboratory-verified material ground truth.",
+  "model_inference_before_annotation": false,
+  "retired_v3_8_holdout_used": false,
+  "records": [
+    {
+      "record_id": "POS_8090535",
+      "role": "development_reference_only",
+      "source_sha256": "630191b16e8709ad040e80304df072318e6863216cc3f6394a20d553949dd3c2",
+      "dimensions": [640, 480],
+      "source_material_description": "Page-level discovery metadata describes refurbished blue-tinted glass and older brown-glazed porcelain insulators.",
+      "boxes": [
+        {"id": "8090535_g1", "material_task_label": "glass", "source_specific_material": "glass", "side": "image_left", "xyxy": [238, 107, 326, 124], "visual_note": "pale blue/green translucent-looking strain assembly"},
+        {"id": "8090535_g2", "material_task_label": "glass", "source_specific_material": "glass", "side": "image_left", "xyxy": [234, 210, 337, 227], "visual_note": "pale blue/green translucent-looking strain assembly"},
+        {"id": "8090535_g3", "material_task_label": "glass", "source_specific_material": "glass", "side": "image_left", "xyxy": [239, 296, 333, 314], "visual_note": "pale blue/green translucent-looking strain assembly"},
+        {"id": "8090535_c1", "material_task_label": "ceramic_family", "source_specific_material": "porcelain", "side": "image_right", "xyxy": [365, 103, 411, 131], "visual_note": "dark brown strain assembly"},
+        {"id": "8090535_c2", "material_task_label": "ceramic_family", "source_specific_material": "porcelain", "side": "image_right", "xyxy": [384, 208, 431, 236], "visual_note": "dark brown strain assembly"},
+        {"id": "8090535_c3", "material_task_label": "ceramic_family", "source_specific_material": "porcelain", "side": "image_right", "xyxy": [372, 294, 421, 323], "visual_note": "dark brown strain assembly"}
+      ]
+    },
+    {
+      "record_id": "POS_2952166",
+      "role": "independent_material_evaluation_frozen_before_inference",
+      "source_sha256": "691c33cbd32767f0055219e2827fd5f6e788aef709d869eb325269e23af20f23",
+      "dimensions": [627, 640],
+      "source_material_description": "Page-level discovery metadata explicitly states ceramic insulators on image-left and green glass insulators on image-right.",
+      "boxes": [
+        {"id": "2952166_c1", "material_task_label": "ceramic_family", "source_specific_material": "ceramic", "side": "image_left", "xyxy": [264, 151, 277, 197], "visual_note": "brown/cream vertical assembly"},
+        {"id": "2952166_c2", "material_task_label": "ceramic_family", "source_specific_material": "ceramic", "side": "image_left", "xyxy": [248, 256, 263, 304], "visual_note": "brown/cream vertical assembly"},
+        {"id": "2952166_c3", "material_task_label": "ceramic_family", "source_specific_material": "ceramic", "side": "image_left", "xyxy": [252, 348, 267, 399], "visual_note": "brown/cream vertical assembly"},
+        {"id": "2952166_g1", "material_task_label": "glass", "source_specific_material": "glass", "side": "image_right", "xyxy": [338, 73, 352, 127], "visual_note": "distinct green vertical assembly"},
+        {"id": "2952166_g2", "material_task_label": "glass", "source_specific_material": "glass", "side": "image_right", "xyxy": [356, 166, 371, 222], "visual_note": "distinct green vertical assembly"},
+        {"id": "2952166_g3", "material_task_label": "glass", "source_specific_material": "glass", "side": "image_right", "xyxy": [348, 273, 364, 332], "visual_note": "distinct green vertical assembly"}
+      ]
+    }
+  ],
+  "claim_boundary": "Source-assisted, visually corroborated material references for a portfolio experiment. No condition, defect, corrosion, mechanical integrity or safety claim. Material model scores must be described as uncalibrated unless calibration is performed on an independent set."
+}
