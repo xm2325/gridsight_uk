@@ -1,0 +1,36 @@
+{
+  "version": "v4.0-provisional-annotation-freeze",
+  "created_after_split_freeze": true,
+  "created_before_v4_model_inference": true,
+  "review_method": "visual_assistant_single",
+  "formal_human_ground_truth": false,
+  "class_contract": {"0":"tower_parent", "2":"insulator_string"},
+  "legacy_training_note": "The seven closed-cycle v2-v3 development sources and their already-versioned labels are promoted to v4 training only; none can regain validation/final status.",
+  "new_training_labels": [
+    {"record_id":"POS_6610209","n_tower":1,"n_insulator":5,"label_sha256":"feaf812dc172847ef9ce6b520c5921f873c72eda3cc2079244880a21108a7157"},
+    {"record_id":"POS_5952661","n_tower":1,"n_insulator":6,"label_sha256":"17af27e810c8777b2f1948a3513ffe78f6c36f1f34d30e4c5c853566cc99e82a"},
+    {"record_id":"POS_7480474","n_tower":1,"n_insulator":6,"label_sha256":"6c4e63541813b0cc3a58d3b9fd60a031cc45575b461b91629f19b06c096d3793"},
+    {"record_id":"POS_1352733","n_tower":1,"n_insulator":3,"label_sha256":"8dac1f4a42c70930d274c672788e0983710768366a6d285e6520153769c03193"}
+  ],
+  "validation_labels": [
+    {"record_id":"POS_354803","n_tower":1,"n_insulator":6,"label_sha256":"f8911e75f65c151b24f2232c57f1729b0586c0572f22e1a42a1f52099a885fec"},
+    {"record_id":"POS_543992","n_tower":1,"n_insulator":6,"label_sha256":"76550a2e47c19e7659bd2d757c34298da08b7ecca73dda0015e1a82d2bea9e69"}
+  ],
+  "final_holdout_labels": [
+    {"record_id":"POS_8091164","n_tower":1,"n_insulator":3,"label_sha256":"a336095dbaacd32471308e9fcaae28ca1ec3b87d96e20ef4b8c026d017ecef3d"},
+    {"record_id":"POS_8239540","n_tower":1,"n_insulator":6,"label_sha256":"0d4a44275ea5ecce13ebdaf2dd7e392d34023e1000c8ed69c54c1b11fcdac94f"}
+  ],
+  "estimated_v4_counts": {
+    "training_sources": 11,
+    "training_insulators": 60,
+    "validation_sources": 2,
+    "validation_insulators": 12,
+    "final_holdout_sources": 2,
+    "final_holdout_insulators": 9
+  },
+  "rules": {
+    "final_holdout": "POS_8091164 and POS_8239540 labels may be stored and hashed, but their images/labels cannot be consumed by model training, prompt/threshold selection, pseudo-label selection, model comparison or error-driven tuning before a separately committed champion freeze.",
+    "label_changes": "Any correction to validation/final labels after v4 model inference begins invalidates their role for clean final evidence unless a new source is selected before seeing model output.",
+    "claim_boundary": "These labels support portfolio experiments only. No material, condition, corrosion, defect, failure or safety-risk claim is encoded."
+  }
+}

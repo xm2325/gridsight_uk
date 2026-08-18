@@ -1,4 +1,4 @@
-name: v3.9 Post-Final Generalization Audit
+name: v4.2 Tower-ROI YOLO26 Insulator Specialist
 
 on:
   pull_request:
@@ -9,45 +9,93 @@ permissions:
   contents: read
 
 concurrency:
-  group: v39-post-final-audit-${{ github.ref }}
+  group: v42-tower-roi-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  PYTHONUNBUFFERED: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
 jobs:
-  post-final-audit:
+  v42-tower-roi:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 55
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install audit-only dependency
-        run: python -m pip install 'numpy>=2,<3'
-      - name: Verify final-holdout contracts and persisted one-shot evidence
+          cache: pip
+          cache-dependency-path: requirements-yolo.txt
+      - name: Verify frozen v4 roles and retired v3 final
         shell: bash
         run: |
-          test -f data/final_holdout/final_holdout_freeze.json
-          test -f data/final_holdout/champion_freeze_v38.json
-          test -f reports/v3_8_final_holdout_summary.json
+          grep -q '"frozen_before_v4_model_inference": true' data/v4_0_split_freeze.json
+          grep -q '"created_before_v4_model_inference": true' data/v4_0_annotation_freeze.json
           grep -q '"no_further_tuning_permitted": true' reports/v3_8_final_holdout_summary.json
-          grep -q '"headline_claim_ready": false' reports/v3_8_final_holdout_summary.json
-      - name: Enforce no automatic final-holdout inference after v3.8
+          needle="v38_final_holdout_"'eval.py'
+          if grep -R "$needle" .github/workflows; then exit 1; fi
+      - name: Prepare v4.1 frozen full-image dataset without final images
+        run: python scripts/v41_prepare_insulator_dataset.py
+      - name: Install lightweight ROI-preparation dependency
+        run: python -m pip install 'pillow>=10,<13'
+      - name: Prepare manual-parent tower ROI train/oracle-validation crops
+        run: python scripts/v42_prepare_tower_roi_dataset.py
+      - name: Verify component counts and final invisibility
         shell: bash
         run: |
-          needle="v38_final_holdout_"'eval.py'
-          if grep -R "$needle" .github/workflows; then
-            echo 'ERROR: post-final workflows must not automatically re-run the frozen holdout evaluator.' >&2
-            exit 1
-          fi
-          echo 'No final-holdout inference command is reachable from current workflows.'
-      - name: Run label-only morphology-shift audit
-        run: python scripts/v39_post_final_morphology_audit.py
+          python - <<'PY'
+          import json
+          r=json.load(open('reports/v4_2_tower_roi_dataset.json'))
+          assert r['counts']=={'train_sources':11,'train_insulators':60,'val_sources':2,'val_insulators':12}, r['counts']
+          assert r['v4_final_holdout_visible'] is False
+          PY
+          test ! -e data/v4_1_yolo/images/final/POS_8091164.jpg
+          test ! -e data/v4_1_yolo/images/final/POS_8239540.jpg
+          test ! -e data/v4_2_tower_roi/images/final/POS_8091164.jpg
+          test ! -e data/v4_2_tower_roi/images/final/POS_8239540.jpg
+      - name: Install CPU PyTorch
+        run: python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
+      - name: Install Ultralytics and YOLOE prompt dependency
+        shell: bash
+        run: |
+          python -m pip install -r requirements-yolo.txt
+          python -m pip install 'git+https://github.com/ultralytics/CLIP.git'
+      - name: Download official YOLOE-26n-seg and YOLO26n checkpoints
+        shell: bash
+        run: |
+          mkdir -p weights
+          python - <<'PY'
+          from pathlib import Path
+          from ultralytics import YOLO, YOLOE
+          import shutil
+          for cls,name in [(YOLOE,'yoloe-26n-seg.pt'),(YOLO,'yolo26n.pt')]:
+              m=cls(name); del m
+              src=Path(name)
+              if not src.exists(): raise SystemExit(f'missing {name}')
+              shutil.copy2(src,Path('weights')/name)
+          PY
+          sha256sum weights/*.pt
+      - name: Train and validate tower-ROI YOLO26n specialist
+        run: python scripts/v42_yolo26n_tower_roi_train_validate.py
+      - name: Re-check final image bytes remain absent
+        shell: bash
+        run: |
+          test ! -e data/v4_1_yolo/images/final/POS_8091164.jpg
+          test ! -e data/v4_1_yolo/images/final/POS_8239540.jpg
+          test ! -e data/v4_2_tower_roi/images/final/POS_8091164.jpg
+          test ! -e data/v4_2_tower_roi/images/final/POS_8239540.jpg
       - uses: actions/upload-artifact@v4
         with:
-          name: v39-post-final-generalization-audit
+          name: v42-tower-roi-yolo26n
           path: |
-            reports/v3_8_final_holdout_summary.json
-            reports/v3_9_morphology_shift.json
-            reports/v3_9_morphology_shift.md
+            reports/v4_2_tower_roi_dataset.json
+            reports/v4_2_yolo26n_tower_roi_validation.json
+            reports/v4_2_pipeline_*.jpg
+            reports/v4_2_oracle_*.jpg
+            reports/v4_2_*_model_parent_crop.jpg
+            runs/v4_2_yolo26n_tower_roi/weights/best.pt
+            runs/v4_2_yolo26n_tower_roi/weights/last.pt
           if-no-files-found: error
-          retention-days: 90
+          compression-level: 0
+          retention-days: 30
