@@ -1,0 +1,45 @@
+{
+  "version": "v4.4-assistant-pixel-review",
+  "review_basis": "Direct visual inspection of the three candidate JPEGs acquired by GitHub Actions run 32113077074 before any model inference on these pixels.",
+  "claim_boundary": "Assistant visual portfolio review. Page-level descriptions may support source-assisted material labels only where the material mapping is also visually resolvable; no condition, defect, failure or safety ground truth is implied.",
+  "retired_v3_8_holdout_used": false,
+  "model_inference_performed_before_review": false,
+  "records": [
+    {
+      "record_id": "POS_8090535",
+      "source_sha256": "630191b16e8709ad040e80304df072318e6863216cc3f6394a20d553949dd3c2",
+      "dimensions": [640, 480],
+      "tower_present": true,
+      "component_annotatability": "high",
+      "morphology": ["D30_angle_tower", "six_visible_strain_like_line_insulator_assemblies", "three_levels", "close_enough_for_component_boxes"],
+      "material_visual_resolvability": "moderate_to_high",
+      "material_pixel_observation": "The three assemblies on image-left are visibly pale blue/green and translucent-looking; the three on image-right are visibly dark brown/black. This is compatible with the source description of refurbished blue-tinted glass versus older brown-glazed porcelain, but the material label must retain source-assisted provenance.",
+      "decision": "accept_v4_training_morphology_and_material_reference",
+      "reason": "Adds angle/strain morphology missing from the original five-tower cohort and provides a second visually contrasting material source without consuming the independent material evaluation image."
+    },
+    {
+      "record_id": "POS_7630781",
+      "source_sha256": "76d87f0f107086b36650328ee748bab337261085421c34bfa5de1366c04f0def",
+      "dimensions": [424, 640],
+      "tower_present": true,
+      "component_annotatability": "high",
+      "morphology": ["terminal_tower", "three_clear_vertical_insulator_strings", "single_sided_terminal_geometry", "vegetation_and_terminal_equipment_context"],
+      "material_visual_resolvability": "low",
+      "decision": "freeze_new_detection_holdout_candidate_before_inference",
+      "reason": "Independent terminal morphology with three clearly visible line insulator strings. Hold it out from the v4 development cycle so later localisation claims are not evaluated only on development-selected structures."
+    },
+    {
+      "record_id": "POS_2952166",
+      "source_sha256": "691c33cbd32767f0055219e2827fd5f6e788aef709d869eb325269e23af20f23",
+      "dimensions": [627, 640],
+      "tower_present": true,
+      "component_annotatability": "high",
+      "morphology": ["close_range_400kV_tower", "six_prominent_vertical_insulator_assemblies", "three_levels", "left_right_material_contrast"],
+      "material_visual_resolvability": "high",
+      "material_pixel_observation": "Three image-right assemblies are distinctly green; three image-left assemblies are brown/cream. The public source description explicitly states ceramic insulators on the left side and green glass insulators on the right side, and the left/right mapping is visually unambiguous in the pixels.",
+      "decision": "freeze_independent_material_subtype_evaluation_source_before_inference",
+      "reason": "Strongest current candidate for an honest glass-versus-ceramic/porcelain showcase because material contrast is both source-described and visually resolvable. It should remain independent of material-model fitting."
+    }
+  ],
+  "next_gate": "Freeze POS_7630781 for future detection evaluation and POS_2952166 for material-subtype evaluation; create source-assisted component boxes/labels before any model inference. Use POS_8090535 only as the v4 development/reference material source."
+}
