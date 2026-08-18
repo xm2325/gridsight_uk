@@ -1,4 +1,4 @@
-name: v2.8 Validation-Selected Tiled Component Inference
+name: v2.9 Acquire Unseen UK Tower Candidates
 
 on:
   pull_request:
@@ -7,60 +7,28 @@ on:
 
 permissions:
   contents: read
-  actions: read
 
 concurrency:
-  group: v28-val-selected-tiled-${{ github.ref }}
+  group: v29-unseen-candidates-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  PYTHONUNBUFFERED: "1"
-  PIP_DISABLE_PIP_VERSION_CHECK: "1"
-  V25_RUN_ID: "32087749320"
-  V27_RUN_ID: "32088489393"
-
 jobs:
-  val-selected-tiled-inference:
+  acquire-unseen-candidates:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: pip
-          cache-dependency-path: requirements-yolo.txt
-      - name: Hydrate current train/val/development imagery from Geograph
-        run: python scripts/v23_download_frozen_images.py
-      - name: Validate current 5 train / 1 val / 1 development contract
-        run: python scripts/v23_validate_pack.py
-      - name: Install CPU PyTorch
-        run: python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
-      - name: Install Ultralytics stack
-        run: python -m pip install -r requirements-yolo.txt
-      - name: Download frozen v2.5 three-source model artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: v25-yoloe-yolo26-component-hybrid
-          path: prior-v25
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ env.V25_RUN_ID }}
-      - name: Download frozen v2.7 five-source model artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: v27-source-diversity-component-ablation
-          path: prior-v27
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ env.V27_RUN_ID }}
-      - name: Select model, tile geometry, confidence and NMS only on validation source
-        run: python scripts/v28_val_selected_tiled_inference.py --v25-root prior-v25 --v27-root prior-v27
+      - name: Download six geographically diverse unseen Geograph tower candidates
+        run: python scripts/v29_acquire_unseen_candidates.py
       - uses: actions/upload-artifact@v4
         with:
-          name: v28-validation-selected-tiled-inference
+          name: v29-unseen-candidate-images
           path: |
-            reports/v2_8_val_tower_crop.jpg
-            reports/v2_8_dev_yoloe_tower_crop.jpg
-            reports/v2_8_val_selected_tiled_POS_2326530.jpg
-            reports/v2_8_val_selected_tiled_metrics.json
+            reports/v2_9_unseen_candidates/*.jpg
+            reports/v2_9_unseen_candidate_manifest.json
           if-no-files-found: error
+          compression-level: 0
           retention-days: 30
