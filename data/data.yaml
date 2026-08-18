@@ -1,0 +1,9 @@
+path: .
+train: images/train
+val: images/val
+test: images/test
+names:
+  0: tower_body
+  1: crossarm
+  2: insulator_string
+  3: earthwire_peak

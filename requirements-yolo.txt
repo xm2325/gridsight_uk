@@ -1,0 +1,3 @@
+ultralytics>=8.4.0
+Pillow>=10
+PyYAML>=6
