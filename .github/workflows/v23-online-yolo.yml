@@ -62,6 +62,24 @@ jobs:
             echo 'ERROR: external asset dependency found in showcase HTML.' >&2
             exit 1
           fi
+      - name: Build fast GitHub Pages preview
+        run: python scripts/v46_build_pages_site.py
+      - name: Verify Pages preview
+        shell: bash
+        run: |
+          test -s _site/index.html
+          test -s _site/offline.html
+          test -s _site/assets/POS_2952166.webp
+          grep -q '<svg id="overlay"' _site/index.html
+          grep -q 'offline.html' _site/index.html
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('_site/index.html')
+          if p.stat().st_size > 250_000:
+              raise SystemExit(f'Online index too large: {p.stat().st_size}')
+          print(f'Online index: {p.stat().st_size:,} bytes')
+          print(f'WebP: {(Path("_site/assets/POS_2952166.webp").stat().st_size):,} bytes')
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: v46-siglip2-material-crops
@@ -71,6 +89,11 @@ jobs:
             reports/v4_6_siglip2_image_reference_prototype_POS_2952166.jpg
             reports/v4_6_siglip2_equal_weight_text_image_hybrid_POS_2952166.jpg
             reports/GridSight_UK_v46_SELF_CONTAINED_SHOWCASE.html
+            _site/index.html
+            _site/offline.html
+            _site/assets/POS_2952166.webp
+            _site/assets/POS_2952166.jpg
+            _site/assets/material_results.json
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
