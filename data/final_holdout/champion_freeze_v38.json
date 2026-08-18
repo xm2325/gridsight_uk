@@ -6,7 +6,7 @@
     "checkpoint": "yoloe-26n-seg.pt",
     "checkpoint_sha256": "1741c1f8da3cea47e2c01829c334a50dc0b9bbd05e685b90a3ce84fae32c8c1b",
     "text_prompt": "insulator string on an electricity transmission tower",
-    "tower_prompt": "steel lattice electricity transmission tower",
+    "tower_prompt": "steel lattice electricity transmission pylon",
     "tower_predict_imgsz": 768,
     "tower_predict_conf": 0.05,
     "tower_roi_expand_px_fraction": 0.08,
