@@ -5,12 +5,18 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/deploy-pages.yml'
+      - 'scripts/v23_download_frozen_images.py'
+      - 'scripts/v29_acquire_unseen_candidates.py'
       - 'scripts/v44_acquire_angle_material_candidates.py'
       - 'scripts/v46_siglip2_material_crops.py'
       - 'scripts/v46_build_self_contained_showcase.py'
       - 'scripts/v46_build_pages_site.py'
+      - 'scripts/v48_build_full_dataset_gallery.py'
       - 'configs/v46_siglip2_material_crop_protocol.json'
+      - 'data/image_sources.json'
+      - 'data/final_holdout/final_holdout_freeze.json'
       - 'data/v4_annotations/material_reference_v44.json'
+      - 'data/v4_holdout/detection_holdout_freeze_v44.json'
       - 'reports/v3_8_final_holdout_summary.json'
       - 'reports/v3_9_morphology_shift.md'
   workflow_dispatch:
@@ -32,48 +38,47 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6
-
       - name: Cache SigLIP2 checkpoint
         uses: actions/cache@v4
         with:
           path: .hf-cache
           key: ${{ runner.os }}-siglip2-base-patch16-naflex-v1
-
       - name: Install CPU inference runtime
         shell: bash
         run: |
           python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
           python -m pip install 'transformers>=4.49,<5' 'sentencepiece>=0.2' 'safetensors>=0.4' 'Pillow>=10,<13'
-
-      - name: Re-acquire exact v4.6 source pixels
+      - name: Hydrate seven legacy frozen source images
+        run: python scripts/v23_download_frozen_images.py
+      - name: Hydrate six v2.9 morphology and holdout sources
+        run: python scripts/v29_acquire_unseen_candidates.py
+      - name: Re-acquire exact v4.4 material and terminal pixels
         run: python scripts/v44_acquire_angle_material_candidates.py
-
-      - name: Verify source hashes
+      - name: Verify source manifests and frozen material hashes
         shell: bash
         run: |
+          test "$(find data/images -type f -name 'POS_*.jpg' | wc -l)" -eq 7
+          test "$(find reports/v2_9_unseen_candidates -type f -name 'POS_*.jpg' | wc -l)" -eq 6
+          test "$(find reports/v4_4_angle_material_candidates -type f -name 'POS_*.jpg' | wc -l)" -eq 3
           echo '630191b16e8709ad040e80304df072318e6863216cc3f6394a20d553949dd3c2  reports/v4_4_angle_material_candidates/POS_8090535.jpg' | sha256sum -c -
           echo '691c33cbd32767f0055219e2827fd5f6e788aef709d869eb325269e23af20f23  reports/v4_4_angle_material_candidates/POS_2952166.jpg' | sha256sum -c -
           test -s reports/v4_4_angle_material_candidates/POS_7630781.jpg
-
       - name: Reproduce v4.6 material evidence
         run: python scripts/v46_siglip2_material_crops.py
-
       - name: Build offline self-contained evidence page
         run: python scripts/v46_build_self_contained_showcase.py
-
       - name: Build sharp multi-image Pages site
         run: python scripts/v46_build_pages_site.py
-
+      - name: Add all-source dataset gallery and provenance
+        run: python scripts/v48_build_full_dataset_gallery.py
       - name: Verify Pages payload
         shell: bash
         run: |
@@ -85,26 +90,31 @@ jobs:
           grep -q '<svg id="overlay"' _site/index.html
           grep -q 'Tower gallery' _site/index.html
           grep -q 'Magnified prediction crops' _site/index.html
+          grep -q 'All 16 source images' _site/index.html
+          grep -q 'Data provenance contract' _site/index.html
           grep -q 'offline.html' _site/index.html
           python - <<'PY'
+          import json
           from pathlib import Path
-          p = Path('_site/index.html')
-          size = p.stat().st_size
-          if size > 220_000:
-              raise SystemExit(f'index.html too large: {size} bytes')
-          crops = sorted(Path('_site/assets').glob('POS_*_detail_*.webp'))
-          if len(crops) != 12:
-              raise SystemExit(f'Expected 12 detail crops, found {len(crops)}')
-          print(f'index.html: {size:,} bytes')
-          print(f'detail crops: {len(crops)} / {sum(x.stat().st_size for x in crops):,} bytes')
-          for q in [
-              Path('_site/assets/POS_2952166.jpg'),
-              Path('_site/assets/POS_8090535.jpg'),
-              Path('_site/assets/POS_7630781.jpg'),
-          ]:
-              print(f'{q}: {q.stat().st_size:,} bytes')
+          p=Path('_site/index.html')
+          if p.stat().st_size > 320_000:
+              raise SystemExit(f'index.html too large: {p.stat().st_size}')
+          detail=sorted(Path('_site/assets').glob('POS_*_detail_*.webp'))
+          full=sorted(Path('_site/assets/dataset/full').glob('POS_*.jpg'))
+          thumbs=sorted(Path('_site/assets/dataset/thumbs').glob('POS_*.webp'))
+          manifest=json.loads(Path('_site/assets/dataset/manifest.json').read_text())
+          if len(detail) != 12:
+              raise SystemExit(f'Expected 12 detail crops, found {len(detail)}')
+          if len(full) != 16 or len(thumbs) != 16:
+              raise SystemExit(f'Expected 16 full + 16 thumb dataset images, found {len(full)} + {len(thumbs)}')
+          if manifest['unique_source_images'] != 16:
+              raise SystemExit('Dataset manifest source count is not 16')
+          print(f'index.html: {p.stat().st_size:,} bytes')
+          print(f'legacy verified Commons originals: {manifest["legacy_verified_commons_originals"]}/7')
+          print(f'detail crops: {len(detail)} / {sum(x.stat().st_size for x in detail):,} bytes')
+          print(f'dataset thumbs: {len(thumbs)} / {sum(x.stat().st_size for x in thumbs):,} bytes')
+          print(f'dataset full images: {len(full)} / {sum(x.stat().st_size for x in full):,} bytes')
           PY
-
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:

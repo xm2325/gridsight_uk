@@ -1,4 +1,4 @@
-name: v4.6 SigLIP2 Material Crop Classification
+name: v4.8 Full Dataset Gallery and SigLIP2 Evidence
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: v46-siglip2-material-${{ github.ref }}
+  group: v48-dataset-gallery-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -18,9 +18,9 @@ env:
   HF_HOME: ${{ github.workspace }}/.hf-cache
 
 jobs:
-  siglip2-material-crops:
+  pages-evidence-gallery:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -32,6 +32,8 @@ jobs:
           grep -q '"no_further_tuning_permitted": true' reports/v3_8_final_holdout_summary.json
           test -f configs/v46_siglip2_material_crop_protocol.json
           test -f data/v4_annotations/material_reference_v44.json
+          test -f data/final_holdout/final_holdout_freeze.json
+          test -f data/v4_holdout/detection_holdout_freeze_v44.json
           grep -q 'adaptive development only' configs/v46_siglip2_material_crop_protocol.json
           if grep -RE "python[[:space:]].*v38_final_holdout.*\.py" .github/workflows; then
             echo 'ERROR: retired v3.8 holdout evaluator reachable.' >&2
@@ -42,17 +44,23 @@ jobs:
         run: |
           python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
           python -m pip install 'transformers>=4.49,<5' 'sentencepiece>=0.2' 'safetensors>=0.4' 'Pillow>=10,<13'
-      - name: Re-acquire frozen material reference/development pixels
-        run: python scripts/v44_acquire_angle_material_candidates.py
-      - name: Verify exact reference and adaptive-development source hashes
+      - name: Hydrate all repository source-image families
         shell: bash
         run: |
+          python scripts/v23_download_frozen_images.py
+          python scripts/v29_acquire_unseen_candidates.py
+          python scripts/v44_acquire_angle_material_candidates.py
+      - name: Verify source counts and exact v4.4 material hashes
+        shell: bash
+        run: |
+          test "$(find data/images -type f -name 'POS_*.jpg' | wc -l)" -eq 7
+          test "$(find reports/v2_9_unseen_candidates -type f -name 'POS_*.jpg' | wc -l)" -eq 6
+          test "$(find reports/v4_4_angle_material_candidates -type f -name 'POS_*.jpg' | wc -l)" -eq 3
           echo '630191b16e8709ad040e80304df072318e6863216cc3f6394a20d553949dd3c2  reports/v4_4_angle_material_candidates/POS_8090535.jpg' | sha256sum -c -
           echo '691c33cbd32767f0055219e2827fd5f6e788aef709d869eb325269e23af20f23  reports/v4_4_angle_material_candidates/POS_2952166.jpg' | sha256sum -c -
-          test -s reports/v4_4_angle_material_candidates/POS_7630781.jpg
-      - name: Run frozen SigLIP2 NaFlex text, image-prototype and hybrid crop methods
+      - name: Run frozen SigLIP2 NaFlex material methods
         run: python scripts/v46_siglip2_material_crops.py
-      - name: Build single-file evidence showcase
+      - name: Build offline self-contained evidence showcase
         run: python scripts/v46_build_self_contained_showcase.py
       - name: Verify self-contained showcase
         shell: bash
@@ -63,34 +71,45 @@ jobs:
             echo 'ERROR: external asset dependency found in showcase HTML.' >&2
             exit 1
           fi
-      - name: Build sharp multi-image GitHub Pages preview
+      - name: Build multi-image Pages preview
         run: python scripts/v46_build_pages_site.py
-      - name: Verify Pages preview
+      - name: Add all 16 source images and provenance
+        run: python scripts/v48_build_full_dataset_gallery.py
+      - name: Verify full dataset gallery
         shell: bash
         run: |
           test -s _site/index.html
           test -s _site/offline.html
-          test -s _site/assets/POS_2952166.jpg
-          test -s _site/assets/POS_8090535.jpg
-          test -s _site/assets/POS_7630781.jpg
-          grep -q '<svg id="overlay"' _site/index.html
-          grep -q 'Tower gallery' _site/index.html
-          grep -q 'Magnified prediction crops' _site/index.html
-          grep -q 'offline.html' _site/index.html
+          grep -q 'All 16 source images' _site/index.html
+          grep -q 'Data provenance contract' _site/index.html
+          grep -q 'POS_2326530' _site/index.html
+          grep -q 'POS_3437435' _site/index.html
+          grep -q 'POS_7630781' _site/index.html
+          grep -q "getElementById('modal-img')" _site/index.html
           python - <<'PY'
+          import json
           from pathlib import Path
           p=Path('_site/index.html')
-          if p.stat().st_size > 220_000:
+          if p.stat().st_size > 320_000:
               raise SystemExit(f'Online index too large: {p.stat().st_size}')
-          crops=sorted(Path('_site/assets').glob('POS_*_detail_*.webp'))
-          if len(crops) != 12:
-              raise SystemExit(f'Expected 12 detail crops, found {len(crops)}')
+          detail=sorted(Path('_site/assets').glob('POS_*_detail_*.webp'))
+          full=sorted(Path('_site/assets/dataset/full').glob('POS_*.jpg'))
+          thumbs=sorted(Path('_site/assets/dataset/thumbs').glob('POS_*.webp'))
+          manifest=json.loads(Path('_site/assets/dataset/manifest.json').read_text())
+          if len(detail) != 12:
+              raise SystemExit(f'Expected 12 detail crops, found {len(detail)}')
+          if len(full) != 16 or len(thumbs) != 16:
+              raise SystemExit(f'Expected 16 full + 16 thumbs, found {len(full)} + {len(thumbs)}')
+          if manifest['unique_source_images'] != 16:
+              raise SystemExit('Manifest does not contain 16 unique images')
           print(f'Online index: {p.stat().st_size:,} bytes')
-          print(f'Detail crops: {len(crops)} / {sum(x.stat().st_size for x in crops):,} bytes')
+          print(f'Legacy verified Commons originals: {manifest["legacy_verified_commons_originals"]}/7')
+          print(f'Dataset thumbs: {len(thumbs)} / {sum(x.stat().st_size for x in thumbs):,} bytes')
+          print(f'Dataset full: {len(full)} / {sum(x.stat().st_size for x in full):,} bytes')
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: v47-pages-gallery-preview
+          name: v48-full-dataset-gallery-preview
           path: |
             reports/v4_6_siglip2_material_crop_results.json
             reports/GridSight_UK_v46_SELF_CONTAINED_SHOWCASE.html
