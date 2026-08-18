@@ -1,37 +1,26 @@
-name: v4.3 Morphology-Diversity YOLO26 Ablation
+name: v4.4 Angle and Material Candidate Acquisition
 
 on:
   pull_request:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      epochs:
-        description: "Identical epochs for baseline and expanded YOLO26n arms"
-        required: false
-        default: "30"
 
 permissions:
   contents: read
 
 concurrency:
-  group: v43-morphology-yolo26-${{ github.ref }}
+  group: v44-angle-material-acquisition-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  PYTHONUNBUFFERED: "1"
-  PIP_DISABLE_PIP_VERSION_CHECK: "1"
-
 jobs:
-  paired-data-ablation:
+  acquire-before-inference:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: pip
-          cache-dependency-path: requirements-yolo.txt
       - name: Preserve retired v3.8 holdout lock
         shell: bash
         run: |
@@ -40,49 +29,26 @@ jobs:
             echo 'ERROR: retired holdout evaluator reachable from v4 workflow.' >&2
             exit 1
           fi
-      - name: Install CPU PyTorch
-        run: python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
-      - name: Install Ultralytics stack
-        run: python -m pip install -r requirements-yolo.txt
-      - name: Hydrate original training sources only
-        run: python scripts/v23_download_frozen_images.py
-      - name: Assert retired final-holdout pixels remain absent
+      - name: Install image audit dependency only
+        run: python -m pip install 'Pillow>=10,<13'
+      - name: Acquire pre-inference angle, terminal and material-context candidates
+        run: python scripts/v44_acquire_angle_material_candidates.py
+      - name: Verify candidate-only boundary
         shell: bash
         run: |
-          test ! -e data/images/test/POS_3437435.jpg
-          test ! -e data/images/test/POS_7561805.jpg
-      - name: Re-acquire v4 morphology sources
-        run: python scripts/v40_acquire_morphology_candidates.py
-      - name: Download and hash official pretrained YOLO26n
-        shell: bash
-        run: |
-          mkdir -p weights
-          python - <<'PY'
-          from pathlib import Path
-          from ultralytics import YOLO
-          import shutil
-          name='yolo26n.pt'
-          m=YOLO(name); del m
-          src=Path(name)
-          if not src.exists(): raise SystemExit(f'missing {name}')
-          shutil.copy2(src,Path('weights')/name)
-          PY
-          echo '9b09cc8bf347f0fc8a5f7657480587f25db09b34bf33b0652110fb03a8ad4fef  weights/yolo26n.pt' | sha256sum -c -
-      - name: Train paired baseline vs +strain-morphology arms and evaluate on fixed new validation tower
-        env:
-          EPOCHS: ${{ github.event_name == 'workflow_dispatch' && inputs.epochs || '30' }}
-        run: python scripts/v43_morphology_diversity_yolo26.py --epochs "$EPOCHS"
+          grep -q '"count": 3' reports/v4_4_angle_material_candidate_manifest.json
+          grep -q '"model_inference_performed": false' reports/v4_4_angle_material_candidate_manifest.json
+          grep -q '"material_ground_truth_status": "none; page-level descriptive context only"' reports/v4_4_angle_material_candidate_manifest.json
+          test -f reports/v4_4_angle_material_contact_sheet.jpg
+          ! grep -q 'POS_3437435' reports/v4_4_angle_material_candidate_manifest.json
+          ! grep -q 'POS_7561805' reports/v4_4_angle_material_candidate_manifest.json
       - uses: actions/upload-artifact@v4
         with:
-          name: v43-morphology-diversity-yolo26
+          name: v44-angle-material-candidates
           path: |
-            reports/v4_3_morphology_diversity_yolo26.json
-            reports/v4_3_baseline_POS_8091164.jpg
-            reports/v4_3_expanded_POS_8091164.jpg
-            runs/v4_3_yolo26n_baseline/results.csv
-            runs/v4_3_yolo26n_expanded/results.csv
-            runs/v4_3_yolo26n_baseline/weights/*.pt
-            runs/v4_3_yolo26n_expanded/weights/*.pt
+            reports/v4_4_angle_material_candidate_manifest.json
+            reports/v4_4_angle_material_contact_sheet.jpg
+            reports/v4_4_angle_material_candidates/*.jpg
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
