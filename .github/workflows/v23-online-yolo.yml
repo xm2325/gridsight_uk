@@ -1,4 +1,4 @@
-name: v4.10 Primary 16-image Gallery and SigLIP2 Evidence
+name: v4.11 Primary 16-image Gallery and Pinned SigLIP2 Evidence
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: v410-primary-gallery-${{ github.ref }}
+  group: v411-primary-gallery-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.11.15"
       - name: Preserve retired detection holdouts and material evidence semantics
         shell: bash
         run: |
@@ -39,11 +39,20 @@ jobs:
             echo 'ERROR: retired v3.8 holdout evaluator reachable.' >&2
             exit 1
           fi
-      - name: Install CPU PyTorch and SigLIP2 runtime
+      - name: Install pinned CPU PyTorch and SigLIP2 runtime
         shell: bash
         run: |
-          python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
-          python -m pip install 'transformers>=4.49,<5' 'sentencepiece>=0.2' 'safetensors>=0.4' 'Pillow>=10,<13'
+          python -m pip install 'torch==2.13.0+cpu' 'torchvision==0.28.0+cpu' --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install 'transformers==4.57.6' 'sentencepiece==0.2.2' 'safetensors==0.8.0' 'Pillow==12.3.0'
+          python - <<'PY'
+          import PIL, torch, transformers
+          print('torch', torch.__version__)
+          print('transformers', transformers.__version__)
+          print('Pillow', PIL.__version__)
+          assert torch.__version__ == '2.13.0+cpu'
+          assert transformers.__version__ == '4.57.6'
+          assert PIL.__version__ == '12.3.0'
+          PY
       - name: Hydrate all repository source-image families
         shell: bash
         run: |
@@ -79,7 +88,7 @@ jobs:
         run: python scripts/v49_build_case_study_explorer.py
       - name: Promote all 16 sources to the primary gallery
         run: python scripts/v50_promote_full_gallery.py
-      - name: Verify primary 16-image gallery
+      - name: Verify pinned v4.11 Pages candidate
         shell: bash
         run: |
           test -s _site/index.html
@@ -94,6 +103,7 @@ jobs:
           grep -q 'POS_3437435' _site/index.html
           grep -q 'POS_7630781' _site/index.html
           grep -q 'unspent frozen holdout' _site/index.html
+          grep -q 'v4.11-primary-16-gallery' _site/index.html
           grep -q "getElementById('modal-img')" _site/index.html
           if grep -q 'Three source images, three tower configurations' _site/index.html; then
             echo 'ERROR: old three-image gallery is still present.' >&2
@@ -124,6 +134,8 @@ jobs:
               raise SystemExit('Expected one promoted Gallery section and no separate Dataset section')
           if text.count('class="case-open"') != 16:
               raise SystemExit('Expected 16 gallery case-study buttons')
+          if text.count('v4.11-primary-16-gallery') != 2:
+              raise SystemExit('Expected v4.11 build marker in meta and footer')
           if cases['cases']['POS_7630781']['metrics'][-1]['value'] != 'NOT RUN':
               raise SystemExit('POS_7630781 must remain an unspent holdout')
           order=[
@@ -136,16 +148,17 @@ jobs:
           if shown != expected:
               raise SystemExit(f'Material case-study metrics do not match this CI run: shown={shown}, expected={expected}')
           print(f'Online index: {p.stat().st_size:,} bytes')
+          print('Build marker: v4.11-primary-16-gallery')
           print('Primary gallery cards: 16/16')
           print(f'Legacy verified Commons originals: {manifest["legacy_verified_commons_originals"]}/7')
           print(f'Case studies: {cases["case_count"]}; featured: {len(cases["featured"])}')
-          print(f'Material case metrics from this run: {shown}')
+          print(f'Material case metrics from this pinned run: {shown}')
           print(f'Dataset thumbs: {len(thumbs)} / {sum(x.stat().st_size for x in thumbs):,} bytes')
           print(f'Dataset full: {len(full)} / {sum(x.stat().st_size for x in full):,} bytes')
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: v410-primary-16-image-gallery-preview
+          name: v411-pinned-primary-16-image-gallery-preview
           path: |
             reports/v4_6_siglip2_material_crop_results.json
             reports/GridSight_UK_v46_SELF_CONTAINED_SHOWCASE.html
