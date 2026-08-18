@@ -1,4 +1,4 @@
-name: v4.0 Morphology-Diverse Candidate Acquisition
+name: v4.1 Morphology-Diverse YOLOE vs YOLO26 Validation
 
 on:
   pull_request:
@@ -9,33 +9,93 @@ permissions:
   contents: read
 
 concurrency:
-  group: v40-morphology-acquisition-${{ github.ref }}
+  group: v41-morphology-validation-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  PYTHONUNBUFFERED: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
 jobs:
-  acquire-candidates:
+  v41-validation:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Verify old final holdout stays retired
+          cache: pip
+          cache-dependency-path: requirements-yolo.txt
+      - name: Verify v4 split and annotation freeze before model access
         shell: bash
         run: |
+          test -f data/v4_0_split_freeze.json
+          test -f data/v4_0_annotation_freeze.json
+          grep -q '"frozen_before_v4_model_inference": true' data/v4_0_split_freeze.json
+          grep -q '"created_before_v4_model_inference": true' data/v4_0_annotation_freeze.json
+          grep -q 'POS_8091164' data/v4_0_split_freeze.json
+          grep -q 'POS_8239540' data/v4_0_split_freeze.json
           test -f reports/v3_8_final_holdout_summary.json
           grep -q '"no_further_tuning_permitted": true' reports/v3_8_final_holdout_summary.json
           needle="v38_final_holdout_"'eval.py'
           if grep -R "$needle" .github/workflows; then exit 1; fi
-      - name: Acquire 10 new model-unseen morphology candidates
-        run: python scripts/v40_acquire_morphology_candidates.py
+      - name: Prepare frozen v4.1 one-class dataset WITHOUT final images
+        run: python scripts/v41_prepare_insulator_dataset.py
+      - name: Verify final image bytes are absent from model runtime dataset
+        shell: bash
+        run: |
+          test ! -e data/v4_1_yolo/images/final/POS_8091164.jpg
+          test ! -e data/v4_1_yolo/images/final/POS_8239540.jpg
+          python - <<'PY'
+          import json
+          r=json.load(open('reports/v4_1_dataset_manifest.json'))
+          assert r['counts']=={'train_sources':11,'train_insulators':60,'val_sources':2,'val_insulators':12}, r['counts']
+          assert r['final_holdout_visible_to_model'] is False
+          print(r['counts'])
+          PY
+      - name: Install CPU PyTorch
+        run: python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
+      - name: Install Ultralytics and YOLOE text-prompt dependency
+        shell: bash
+        run: |
+          python -m pip install -r requirements-yolo.txt
+          python -m pip install 'git+https://github.com/ultralytics/CLIP.git'
+      - name: Download official YOLOE-26n-seg and YOLO26n checkpoints
+        shell: bash
+        run: |
+          mkdir -p weights
+          python - <<'PY'
+          from pathlib import Path
+          from ultralytics import YOLO, YOLOE
+          import shutil
+          for cls,name in [(YOLOE,'yoloe-26n-seg.pt'),(YOLO,'yolo26n.pt')]:
+              m=cls(name); del m
+              src=Path(name)
+              if not src.exists(): raise SystemExit(f'missing {name}')
+              shutil.copy2(src,Path('weights')/name)
+          PY
+          sha256sum weights/*.pt
+      - name: Run YOLOE-26 text-prompt validation baseline
+        run: python scripts/v41_yoloe_text_validation.py
+      - name: Fine-tune pretrained YOLO26n on 11-source / 60-insulator training set
+        run: python scripts/v41_yolo26n_train_validate.py
+      - name: Re-check that v4 final image bytes were never hydrated
+        shell: bash
+        run: |
+          test ! -e data/v4_1_yolo/images/final/POS_8091164.jpg
+          test ! -e data/v4_1_yolo/images/final/POS_8239540.jpg
       - uses: actions/upload-artifact@v4
         with:
-          name: v40-morphology-candidates
+          name: v41-morphology-diverse-validation
           path: |
-            reports/v4_0_candidate_manifest.json
-            reports/v4_0_candidates/*.jpg
+            reports/v4_1_dataset_manifest.json
+            reports/v4_1_yoloe_text_validation.json
+            reports/v4_1_yolo26n_validation.json
+            reports/v4_1_yoloe_*_selected.jpg
+            reports/v4_1_yolo26n_*_selected.jpg
+            runs/v4_1_yolo26n/weights/best.pt
+            runs/v4_1_yolo26n/weights/last.pt
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
