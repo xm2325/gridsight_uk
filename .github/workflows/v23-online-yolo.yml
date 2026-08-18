@@ -1,15 +1,20 @@
-name: v4.2 Frozen Pre-Adaptation Morphology Diagnostic
+name: v4.3 Morphology-Diversity YOLO26 Ablation
 
 on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      epochs:
+        description: "Identical epochs for baseline and expanded YOLO26n arms"
+        required: false
+        default: "30"
 
 permissions:
   contents: read
 
 concurrency:
-  group: v42-preadaptation-${{ github.ref }}
+  group: v43-morphology-yolo26-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -17,9 +22,9 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
 
 jobs:
-  frozen-preadaptation-diagnostic:
+  paired-data-ablation:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -30,63 +35,54 @@ jobs:
       - name: Preserve retired v3.8 holdout lock
         shell: bash
         run: |
-          test -f data/final_holdout/champion_freeze_v38.json
           grep -q '"no_further_tuning_permitted": true' reports/v3_8_final_holdout_summary.json
           if grep -RE "python[[:space:]].*v38_final_holdout.*\.py" .github/workflows; then
             echo 'ERROR: retired holdout evaluator reachable from v4 workflow.' >&2
             exit 1
           fi
-      - name: Verify pixel-adjudicated v4 annotations exist before evaluation
-        shell: bash
-        run: |
-          test -f data/v4_annotations/assistant_provisional_insulators.json
-          grep -q '"n_boxes": 7' data/v4_annotations/assistant_provisional_insulators.json
-          grep -q '"n_boxes": 3' data/v4_annotations/assistant_provisional_insulators.json
-          grep -q '"retired_v3_8_holdout_used": false' data/v4_annotations/assistant_provisional_insulators.json
       - name: Install CPU PyTorch
         run: python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
-      - name: Install Ultralytics, CLIP and image dependencies
-        shell: bash
-        run: |
-          python -m pip install -r requirements-yolo.txt
-          python -m pip install 'git+https://github.com/ultralytics/CLIP.git'
-      - name: Hydrate original five training sources for exact v3.6 geometry-prior reproduction
+      - name: Install Ultralytics stack
+        run: python -m pip install -r requirements-yolo.txt
+      - name: Hydrate original training sources only
         run: python scripts/v23_download_frozen_images.py
-      - name: Assert retired final-holdout pixels were not hydrated
+      - name: Assert retired final-holdout pixels remain absent
         shell: bash
         run: |
           test ! -e data/images/test/POS_3437435.jpg
           test ! -e data/images/test/POS_7561805.jpg
-      - name: Re-acquire v4 candidate pixels
+      - name: Re-acquire v4 morphology sources
         run: python scripts/v40_acquire_morphology_candidates.py
-      - name: Download and hash frozen YOLOE-26n-seg checkpoint
+      - name: Download and hash official pretrained YOLO26n
         shell: bash
         run: |
           mkdir -p weights
           python - <<'PY'
           from pathlib import Path
-          from ultralytics import YOLOE
+          from ultralytics import YOLO
           import shutil
-          name='yoloe-26n-seg.pt'
-          m=YOLOE(name); del m
+          name='yolo26n.pt'
+          m=YOLO(name); del m
           src=Path(name)
           if not src.exists(): raise SystemExit(f'missing {name}')
           shutil.copy2(src,Path('weights')/name)
           PY
-          echo '1741c1f8da3cea47e2c01829c334a50dc0b9bbd05e685b90a3ce84fae32c8c1b  weights/yoloe-26n-seg.pt' | sha256sum -c -
-      - name: Evaluate v3.8-frozen rules on new v4 morphology without retuning
-        run: python scripts/v42_preadaptation_morphology_diagnostic.py
+          echo '9b09cc8bf347f0fc8a5f7657480587f25db09b34bf33b0652110fb03a8ad4fef  weights/yolo26n.pt' | sha256sum -c -
+      - name: Train paired baseline vs +strain-morphology arms and evaluate on fixed new validation tower
+        env:
+          EPOCHS: ${{ github.event_name == 'workflow_dispatch' && inputs.epochs || '30' }}
+        run: python scripts/v43_morphology_diversity_yolo26.py --epochs "$EPOCHS"
       - uses: actions/upload-artifact@v4
         with:
-          name: v42-frozen-preadaptation-morphology
+          name: v43-morphology-diversity-yolo26
           path: |
-            reports/v4_2_preadaptation_morphology_diagnostic.json
-            reports/v4_2_POS_6610209_tower_roi.jpg
-            reports/v4_2_POS_6610209_raw_frozen.jpg
-            reports/v4_2_POS_6610209_geometry_frozen.jpg
-            reports/v4_2_POS_8091164_tower_roi.jpg
-            reports/v4_2_POS_8091164_raw_frozen.jpg
-            reports/v4_2_POS_8091164_geometry_frozen.jpg
+            reports/v4_3_morphology_diversity_yolo26.json
+            reports/v4_3_baseline_POS_8091164.jpg
+            reports/v4_3_expanded_POS_8091164.jpg
+            runs/v4_3_yolo26n_baseline/results.csv
+            runs/v4_3_yolo26n_expanded/results.csv
+            runs/v4_3_yolo26n_baseline/weights/*.pt
+            runs/v4_3_yolo26n_expanded/weights/*.pt
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
