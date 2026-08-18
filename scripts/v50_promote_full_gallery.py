@@ -17,8 +17,9 @@ def main() -> None:
         raise RuntimeError("Original three-image gallery section not found")
     if '<section id="dataset">' not in page:
         raise RuntimeError("Full 16-image dataset gallery section not found")
-    if page.count('class="dataset-card"') != 16:
-        raise RuntimeError(f"Expected 16 dataset cards before promotion, found {page.count('class=\"dataset-card\"')}")
+    dataset_cards_before = page.count('class="dataset-card"')
+    if dataset_cards_before != 16:
+        raise RuntimeError(f"Expected 16 dataset cards before promotion, found {dataset_cards_before}")
 
     # Remove the old three-card showcase section entirely. Those same three sources remain
     # represented inside the full provenance gallery, with their evidence roles preserved.
