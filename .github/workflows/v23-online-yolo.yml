@@ -1,15 +1,20 @@
-name: v2.4 Online YOLOE-26 Hierarchical Showcase
+name: v2.4 Pretrained YOLO26 Fine-Tune Pilot
 
 on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      epochs:
+        description: "Exploratory pretrained YOLO26n fine-tune epochs"
+        required: false
+        default: "20"
 
 permissions:
   contents: read
 
 concurrency:
-  group: v24-hierarchical-showcase-${{ github.ref }}
+  group: v24-yolo26-finetune-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -17,9 +22,9 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
 
 jobs:
-  yoloe-hierarchical-showcase:
+  pretrained-yolo26-pilot:
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -27,44 +32,44 @@ jobs:
           python-version: "3.11"
           cache: pip
           cache-dependency-path: requirements-yolo.txt
-      - name: Download fixed held-out image from Geograph direct host
-        run: python scripts/v23_download_showcase.py
+      - name: Hydrate five UK tower images through Geograph direct derivatives
+        run: python scripts/v23_download_frozen_images.py
+      - name: Validate fixed 3 train / 1 val / 1 test and 55 boxes
+        run: python scripts/v23_validate_pack.py
       - name: Install CPU PyTorch
         run: python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
       - name: Install Ultralytics stack
         run: python -m pip install -r requirements-yolo.txt
-      - name: Download YOLOE-26n-seg checkpoint into frozen weights directory
+      - name: Download official pretrained YOLO26n checkpoint
         shell: bash
         run: |
           mkdir -p weights
           python - <<'PY'
           from pathlib import Path
-          from ultralytics import YOLOE
+          from ultralytics import YOLO
           import shutil
-          m=YOLOE('yoloe-26n-seg.pt')
+          m=YOLO('yolo26n.pt')
           del m
-          src=Path('yoloe-26n-seg.pt')
+          src=Path('yolo26n.pt')
           if not src.exists():
-              raise SystemExit('Ultralytics did not materialize yoloe-26n-seg.pt')
+              raise SystemExit('Ultralytics did not materialize yolo26n.pt')
           shutil.copy2(src, Path('weights')/src.name)
           PY
-          sha256sum weights/yoloe-26n-seg.pt
-      - name: Run single-pass YOLOE baseline
-        run: python scripts/v23_yoloe_zero_shot.py
-      - name: Run hierarchical tower-ROI to component YOLOE experiment
-        run: python scripts/v24_yoloe_hierarchical.py
+          sha256sum weights/yolo26n.pt
+      - name: Fine-tune pretrained YOLO26n on source-isolated component boxes
+        env:
+          EPOCHS: ${{ github.event_name == 'workflow_dispatch' && inputs.epochs || '20' }}
+        run: python scripts/v23_yolo26_cpu_finetune.py --epochs "$EPOCHS" --imgsz 640
       - uses: actions/upload-artifact@v4
         with:
-          name: v24-yoloe-hierarchical-showcase
+          name: v24-yolo26-pretrained-finetune-pilot
           path: |
-            data/images/test/POS_2326530.jpg
-            reports/v2_3_showcase_image_download.json
-            reports/v2_3_yoloe26_zero_shot_POS_2326530.jpg
-            reports/v2_3_yoloe26_zero_shot_predictions.json
-            reports/v2_4_yoloe_tower_roi_POS_2326530.jpg
-            reports/v2_4_yoloe_hierarchical_POS_2326530.jpg
-            reports/v2_4_yoloe_hierarchical_metrics.json
-            weights/yoloe-26n-seg.pt
+            reports/v2_3_frozen_image_download.json
+            reports/v2_3_pack_validation.json
+            reports/v2_3_yolo26n_cpu_finetune_POS_2326530.jpg
+            reports/v2_3_yolo26n_cpu_finetune_status.json
+            runs/v2_3_yolo26n_cpu_smoke/weights/*.pt
+            weights/yolo26n.pt
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
