@@ -1,4 +1,4 @@
-name: v3.9 Post-Final Generalization Audit
+name: v4.0 Morphology-Diverse Acquisition Audit
 
 on:
   pull_request:
@@ -9,45 +9,49 @@ permissions:
   contents: read
 
 concurrency:
-  group: v39-post-final-audit-${{ github.ref }}
+  group: v40-morphology-acquisition-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  post-final-audit:
+  acquire-and-audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install audit-only dependency
-        run: python -m pip install 'numpy>=2,<3'
-      - name: Verify final-holdout contracts and persisted one-shot evidence
+      - name: Preserve retired final-holdout lock
         shell: bash
         run: |
           test -f data/final_holdout/final_holdout_freeze.json
           test -f data/final_holdout/champion_freeze_v38.json
           test -f reports/v3_8_final_holdout_summary.json
           grep -q '"no_further_tuning_permitted": true' reports/v3_8_final_holdout_summary.json
-          grep -q '"headline_claim_ready": false' reports/v3_8_final_holdout_summary.json
-      - name: Enforce no automatic final-holdout inference after v3.8
-        shell: bash
-        run: |
-          needle="v38_final_holdout_"'eval.py'
-          if grep -R "$needle" .github/workflows; then
-            echo 'ERROR: post-final workflows must not automatically re-run the frozen holdout evaluator.' >&2
+          if grep -R "v38_final_holdout_.*eval.py" .github/workflows; then
+            echo 'ERROR: retired v3.8 holdout evaluator must not be reachable from v4 workflows.' >&2
             exit 1
           fi
-          echo 'No final-holdout inference command is reachable from current workflows.'
-      - name: Run label-only morphology-shift audit
-        run: python scripts/v39_post_final_morphology_audit.py
+          echo 'Retired v3.8 holdout remains locked.'
+      - name: Install image audit dependency
+        run: python -m pip install 'Pillow>=10,<13'
+      - name: Acquire four pre-existing non-holdout morphology candidates
+        run: python scripts/v40_acquire_morphology_candidates.py
+      - name: Verify candidate-only evidence boundary
+        shell: bash
+        run: |
+          grep -q '"model_inference_performed": false' reports/v4_0_morphology_candidate_manifest.json
+          grep -q '"count": 4' reports/v4_0_morphology_candidate_manifest.json
+          test -f reports/v4_0_morphology_contact_sheet.jpg
+          ! grep -q 'POS_3437435' reports/v4_0_morphology_candidate_manifest.json
+          ! grep -q 'POS_7561805' reports/v4_0_morphology_candidate_manifest.json
       - uses: actions/upload-artifact@v4
         with:
-          name: v39-post-final-generalization-audit
+          name: v40-morphology-candidates
           path: |
-            reports/v3_8_final_holdout_summary.json
-            reports/v3_9_morphology_shift.json
-            reports/v3_9_morphology_shift.md
+            reports/v4_0_morphology_candidate_manifest.json
+            reports/v4_0_morphology_contact_sheet.jpg
+            reports/v4_0_morphology_candidates/*.jpg
           if-no-files-found: error
-          retention-days: 90
+          compression-level: 0
+          retention-days: 30
