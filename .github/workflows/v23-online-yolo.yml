@@ -1,4 +1,4 @@
-name: v4.4 Angle and Material Candidate Acquisition
+name: v4.5 YOLOE Material Visual-Prompt Evaluation
 
 on:
   pull_request:
@@ -9,46 +9,79 @@ permissions:
   contents: read
 
 concurrency:
-  group: v44-angle-material-acquisition-${{ github.ref }}
+  group: v45-material-vpe-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  PYTHONUNBUFFERED: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
 jobs:
-  acquire-before-inference:
+  material-visual-prompt-eval:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Preserve retired v3.8 holdout lock
+          cache: pip
+          cache-dependency-path: requirements-yolo.txt
+      - name: Preserve retired v3.8 detection holdout lock
         shell: bash
         run: |
           grep -q '"no_further_tuning_permitted": true' reports/v3_8_final_holdout_summary.json
           if grep -RE "python[[:space:]].*v38_final_holdout.*\.py" .github/workflows; then
-            echo 'ERROR: retired holdout evaluator reachable from v4 workflow.' >&2
+            echo 'ERROR: retired v3.8 holdout evaluator reachable.' >&2
             exit 1
           fi
-      - name: Install image audit dependency only
-        run: python -m pip install 'Pillow>=10,<13'
-      - name: Acquire pre-inference angle, terminal and material-context candidates
-        run: python scripts/v44_acquire_angle_material_candidates.py
-      - name: Verify candidate-only boundary
+      - name: Verify material protocol, annotations and independent evaluation were frozen before inference
         shell: bash
         run: |
-          grep -q '"count": 3' reports/v4_4_angle_material_candidate_manifest.json
-          grep -q '"model_inference_performed": false' reports/v4_4_angle_material_candidate_manifest.json
-          grep -q '"material_ground_truth_status": "none; page-level descriptive context only"' reports/v4_4_angle_material_candidate_manifest.json
-          test -f reports/v4_4_angle_material_contact_sheet.jpg
-          ! grep -q 'POS_3437435' reports/v4_4_angle_material_candidate_manifest.json
-          ! grep -q 'POS_7561805' reports/v4_4_angle_material_candidate_manifest.json
+          test -f configs/v45_material_visual_prompt_protocol.json
+          test -f data/v4_annotations/material_reference_v44.json
+          test -f data/v4_holdout/material_eval_freeze_v44.json
+          grep -q '"frozen_before_material_inference": true' configs/v45_material_visual_prompt_protocol.json
+          grep -q '"frozen_before_material_model_inference": true' data/v4_holdout/material_eval_freeze_v44.json
+          grep -q '"model_inference_before_annotation": false' data/v4_annotations/material_reference_v44.json
+      - name: Install CPU PyTorch
+        run: python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
+      - name: Install Ultralytics visual-prompt stack
+        shell: bash
+        run: |
+          python -m pip install -r requirements-yolo.txt
+          python -m pip install 'git+https://github.com/ultralytics/CLIP.git'
+      - name: Re-acquire frozen reference and evaluation pixels
+        run: python scripts/v44_acquire_angle_material_candidates.py
+      - name: Verify exact source hashes
+        shell: bash
+        run: |
+          echo '630191b16e8709ad040e80304df072318e6863216cc3f6394a20d553949dd3c2  reports/v4_4_angle_material_candidates/POS_8090535.jpg' | sha256sum -c -
+          echo '691c33cbd32767f0055219e2827fd5f6e788aef709d869eb325269e23af20f23  reports/v4_4_angle_material_candidates/POS_2952166.jpg' | sha256sum -c -
+      - name: Download and hash official YOLOE-26n-seg checkpoint
+        shell: bash
+        run: |
+          mkdir -p weights
+          python - <<'PY'
+          from pathlib import Path
+          from ultralytics import YOLOE
+          import shutil
+          name='yoloe-26n-seg.pt'
+          m=YOLOE(name); del m
+          src=Path(name)
+          if not src.exists(): raise SystemExit(f'missing {name}')
+          shutil.copy2(src,Path('weights')/name)
+          PY
+          echo '1741c1f8da3cea47e2c01829c334a50dc0b9bbd05e685b90a3ce84fae32c8c1b  weights/yoloe-26n-seg.pt' | sha256sum -c -
+      - name: Run both preregistered cross-source material visual-prompt methods
+        run: python scripts/v45_material_visual_prompt_eval.py
       - uses: actions/upload-artifact@v4
         with:
-          name: v44-angle-material-candidates
+          name: v45-yoloe-material-visual-prompt
           path: |
-            reports/v4_4_angle_material_candidate_manifest.json
-            reports/v4_4_angle_material_contact_sheet.jpg
-            reports/v4_4_angle_material_candidates/*.jpg
+            reports/v4_5_material_visual_prompt_eval.json
+            reports/v4_5_joint_two_class_vpe_POS_2952166.jpg
+            reports/v4_5_class_isolated_vpe_POS_2952166.jpg
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
