@@ -1,4 +1,4 @@
-name: v2.4 Pretrained YOLO26 Fine-Tune Pilot
+name: v2.5 YOLOE ROI + Pretrained YOLO26 Component Hybrid
 
 on:
   pull_request:
@@ -6,15 +6,15 @@ on:
   workflow_dispatch:
     inputs:
       epochs:
-        description: "Exploratory pretrained YOLO26n fine-tune epochs"
+        description: "Exploratory YOLO26n component-crop fine-tune epochs"
         required: false
-        default: "20"
+        default: "80"
 
 permissions:
   contents: read
 
 concurrency:
-  group: v24-yolo26-finetune-${{ github.ref }}
+  group: v25-yoloe-yolo26-hybrid-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -22,9 +22,9 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
 
 jobs:
-  pretrained-yolo26-pilot:
+  hybrid-component-pilot:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -40,36 +40,38 @@ jobs:
         run: python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
       - name: Install Ultralytics stack
         run: python -m pip install -r requirements-yolo.txt
-      - name: Download official pretrained YOLO26n checkpoint
+      - name: Download official pretrained YOLO26n and YOLOE-26n-seg checkpoints
         shell: bash
         run: |
           mkdir -p weights
           python - <<'PY'
           from pathlib import Path
-          from ultralytics import YOLO
+          from ultralytics import YOLO, YOLOE
           import shutil
-          m=YOLO('yolo26n.pt')
-          del m
-          src=Path('yolo26n.pt')
-          if not src.exists():
-              raise SystemExit('Ultralytics did not materialize yolo26n.pt')
-          shutil.copy2(src, Path('weights')/src.name)
+          for name, cls in [('yolo26n.pt', YOLO), ('yoloe-26n-seg.pt', YOLOE)]:
+              m=cls(name); del m
+              src=Path(name)
+              if not src.exists(): raise SystemExit(f'Ultralytics did not materialize {name}')
+              shutil.copy2(src, Path('weights')/name)
           PY
-          sha256sum weights/yolo26n.pt
-      - name: Fine-tune pretrained YOLO26n on source-isolated component boxes
+          sha256sum weights/*.pt
+      - name: Train tower-crop component detector; held-out ROI is YOLOE-generated
         env:
-          EPOCHS: ${{ github.event_name == 'workflow_dispatch' && inputs.epochs || '20' }}
-        run: python scripts/v23_yolo26_cpu_finetune.py --epochs "$EPOCHS" --imgsz 640
+          EPOCHS: ${{ github.event_name == 'workflow_dispatch' && inputs.epochs || '80' }}
+        run: python scripts/v25_hybrid_component_detector.py --epochs "$EPOCHS"
       - uses: actions/upload-artifact@v4
         with:
-          name: v24-yolo26-pretrained-finetune-pilot
+          name: v25-yoloe-yolo26-component-hybrid
           path: |
             reports/v2_3_frozen_image_download.json
             reports/v2_3_pack_validation.json
-            reports/v2_3_yolo26n_cpu_finetune_POS_2326530.jpg
-            reports/v2_3_yolo26n_cpu_finetune_status.json
-            runs/v2_3_yolo26n_cpu_smoke/weights/*.pt
+            reports/v2_5_yoloe_yolo26_hybrid_POS_2326530.jpg
+            reports/v2_5_yoloe_yolo26_hybrid_metrics.json
+            data/v25_component_crop/data.yaml
+            runs/v2_5_yolo26n_component_crop/results.csv
+            runs/v2_5_yolo26n_component_crop/weights/*.pt
             weights/yolo26n.pt
+            weights/yoloe-26n-seg.pt
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
