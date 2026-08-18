@@ -1,5 +1,5 @@
 {
-  "version": "v2.3",
+  "version": "v2.7",
   "images": [
     {
       "record_id": "POS_1283842",
@@ -33,6 +33,28 @@
       "expected_width_px": 1069,
       "expected_height_px": 1600,
       "commons_file_name": "Electricity_pylon_-_geograph.org.uk_-_7060068.jpg"
+    },
+    {
+      "record_id": "POS_3778704",
+      "split": "train",
+      "filename": "POS_3778704.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/c/c0/Electricity_pylon_-_geograph.org.uk_-_3778704.jpg",
+      "expected_sha256": "da13f8a8845953672a64353280dee58386809ac48a8639037fdbae5f4a056eb6",
+      "expected_sha1": "97cc98eb571898e2f6227342be12502d2fb4103f",
+      "expected_width_px": 680,
+      "expected_height_px": 1024,
+      "commons_file_name": "Electricity_pylon_-_geograph.org.uk_-_3778704.jpg"
+    },
+    {
+      "record_id": "POS_291727",
+      "split": "train",
+      "filename": "POS_291727.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/f/f1/Electricity_pylon_-_geograph.org.uk_-_291727.jpg",
+      "expected_sha256": "89177b29868e2e149cb93e1994c00c64066e52384f03182e558da1431dcb2277",
+      "expected_sha1": "37d71429dc443e3d231194d47674d6b98df60d75",
+      "expected_width_px": 640,
+      "expected_height_px": 480,
+      "commons_file_name": "Electricity_pylon_-_geograph.org.uk_-_291727.jpg"
     },
     {
       "record_id": "POS_5442616",

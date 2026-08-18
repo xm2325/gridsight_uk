@@ -1,0 +1,31 @@
+{
+  "version": "v2.9-final-holdout-freeze",
+  "selection_basis": "Chosen from pre-existing geographically diverse acquisition queue using pixel review/component annotatability only; no model output was run on these records before this freeze.",
+  "holdout_release_sha256": "5b7fddb7200523b861e4e0970e9ff0b54b0cde2426d9f461b71ec50c417efa9f",
+  "records": [
+    {
+      "record_id": "POS_3437435",
+      "country": "England",
+      "role": "primary_final_component_holdout",
+      "image_url": "https://s0.geograph.org.uk/geophotos/03/43/74/3437435_c782d726.jpg",
+      "image_sha256": "f194d3021b373208e9c5862f5f3840f63b4a870563f9ad3e7f31a7512fff645b",
+      "label_path": "data/final_holdout/labels/POS_3437435.txt",
+      "label_sha256": "d8038ad2e3ea05c22c282134b8648142605ede28d8a78d0a98f741cc04fbb8ac",
+      "n_boxes": 11,
+      "model_inference_before_freeze": false
+    },
+    {
+      "record_id": "POS_7561805",
+      "country": "Scotland",
+      "role": "secondary_scale_final_component_holdout",
+      "image_url": "https://s0.geograph.org.uk/geophotos/07/56/18/7561805_65ecc0eb.jpg",
+      "image_sha256": "237c9e83458bf884220046898d4a2d31ecfed433062ca042e128d04eb217b246",
+      "label_path": "data/final_holdout/labels/POS_7561805.txt",
+      "label_sha256": "ae4794670b1cb4bba27eaf66d5e062bf354342547112d8dbd4826b248c4e83f9",
+      "n_boxes": 11,
+      "model_inference_before_freeze": false
+    }
+  ],
+  "evaluation_rule": "No final-holdout model inference until the development method and operating point are explicitly frozen. Final-holdout results must not be used for further tuning if presented as headline evidence.",
+  "claim_boundary": "Assistant visual labels remain provisional portfolio reference unless independently human-adjudicated; no material/condition/corrosion/defect/safety-risk claim is encoded."
+}

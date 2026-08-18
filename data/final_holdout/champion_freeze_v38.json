@@ -1,0 +1,48 @@
+{
+  "version": "v3.8-final-evaluation-freeze",
+  "frozen_before_final_holdout_inference": true,
+  "champion": {
+    "name": "yoloe26n_text_plus_training_geometry_prior",
+    "checkpoint": "yoloe-26n-seg.pt",
+    "checkpoint_sha256": "1741c1f8da3cea47e2c01829c334a50dc0b9bbd05e685b90a3ce84fae32c8c1b",
+    "text_prompt": "insulator string on an electricity transmission tower",
+    "tower_prompt": "steel lattice electricity transmission pylon",
+    "tower_predict_imgsz": 768,
+    "tower_predict_conf": 0.05,
+    "tower_roi_expand_px_fraction": 0.08,
+    "tower_roi_expand_py_fraction": 0.04,
+    "component_predict_imgsz": 960,
+    "component_raw_conf": 0.001,
+    "geometry_features": [
+      "abs_x_offset_over_tower_width",
+      "y_from_tower_top_over_tower_height",
+      "log_width_over_tower_width",
+      "log_height_over_tower_height"
+    ],
+    "geometry_covariance": "0.75*empirical_cov + 0.25*diag(empirical_cov) + 1e-5*I",
+    "geometry_weight": "exp(-0.5*min(mahalanobis_d2,50))",
+    "fused_score": "yoloe_model_score * geometry_weight",
+    "fused_threshold": 0.0001,
+    "nms_iou": 0.2
+  },
+  "raw_text_baseline": {
+    "component_raw_conf": 0.001,
+    "score_threshold": 0.001071144,
+    "nms_iou": 0.2
+  },
+  "selection_evidence": {
+    "validation_source": "POS_5442616",
+    "v36_raw_text_iou30": {"tp": 2, "fp": 30, "fn": 2, "precision": 0.0625, "recall": 0.5, "f1": 0.1111111111111111},
+    "v36_geometry_fused_iou30": {"tp": 2, "fp": 1, "fn": 2, "precision": 0.6666666666666666, "recall": 0.5, "f1": 0.5714285714285715},
+    "v37_symmetry_completion_validation_result": "no improvement; validation selected n_added=0, so symmetry completion was rejected",
+    "adaptive_development_source": "POS_2326530",
+    "development_not_used_to_choose_final_operating_point": true
+  },
+  "final_holdout_release": {
+    "freeze_file": "data/final_holdout/final_holdout_freeze.json",
+    "holdout_release_sha256": "5b7fddb7200523b861e4e0970e9ff0b54b0cde2426d9f461b71ec50c417efa9f",
+    "records": ["POS_3437435", "POS_7561805"]
+  },
+  "post_evaluation_rule": "Once final holdout inference is run, these holdout results must not be used to modify thresholds, prompts, priors, or model selection if they are presented as final-holdout evidence.",
+  "claim_boundary": "This remains a very small portfolio holdout with assistant-provisional component reference labels; no material, condition, corrosion, defect, failure, or safety-risk performance claim is permitted."
+}

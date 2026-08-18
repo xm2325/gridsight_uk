@@ -1,0 +1,47 @@
+{
+  "evidence_type": "frozen-final-holdout-summary",
+  "github_actions": {
+    "run_id": 32103220833,
+    "artifact_id": 9312281234,
+    "artifact_name": "v38-frozen-final-holdout",
+    "artifact_digest": "sha256:87ad87b045386ceccbc2cc20c8cc8db3c8ed0df4ff37b11c745e0dc3c76ea4ac",
+    "conclusion": "success"
+  },
+  "holdout_release_sha256": "5b7fddb7200523b861e4e0970e9ff0b54b0cde2426d9f461b71ec50c417efa9f",
+  "champion_freeze_sha256": "3a512ce0ed5a944e2dab7bf9abb2e30cf4c596b8d9813bc86c4ebc32a1006a1a",
+  "checkpoint_sha256": "1741c1f8da3cea47e2c01829c334a50dc0b9bbd05e685b90a3ce84fae32c8c1b",
+  "n_final_images": 2,
+  "n_reference_insulators": 12,
+  "raw_text_baseline": {
+    "iou_0_30": {"tp": 10, "fp": 34, "fn": 2, "precision": 0.22727272727272727, "recall": 0.8333333333333334, "f1": 0.35714285714285715},
+    "iou_0_50": {"tp": 5, "fp": 39, "fn": 7, "precision": 0.11363636363636363, "recall": 0.4166666666666667, "f1": 0.17857142857142858}
+  },
+  "frozen_geometry_champion": {
+    "iou_0_30": {"tp": 1, "fp": 0, "fn": 11, "precision": 1.0, "recall": 0.08333333333333333, "f1": 0.15384615384615385},
+    "iou_0_50": {"tp": 0, "fp": 1, "fn": 12, "precision": 0.0, "recall": 0.0, "f1": 0.0}
+  },
+  "per_image": {
+    "POS_3437435": {
+      "country": "England",
+      "dimensions": [425, 640],
+      "tower_iou": 0.5286826746646672,
+      "tower_score": 0.10223037004470825,
+      "n_reference_insulators": 6,
+      "raw_text_iou_0_30": {"tp": 4, "fp": 19, "fn": 2, "precision": 0.17391304347826086, "recall": 0.6666666666666666, "f1": 0.27586206896551724},
+      "champion_iou_0_30": {"tp": 0, "fp": 0, "fn": 6, "precision": 0.0, "recall": 0.0, "f1": 0.0}
+    },
+    "POS_7561805": {
+      "country": "Scotland",
+      "dimensions": [476, 640],
+      "tower_iou": 0.8376588265909779,
+      "tower_score": 0.2589387595653534,
+      "n_reference_insulators": 6,
+      "raw_text_iou_0_30": {"tp": 6, "fp": 15, "fn": 0, "precision": 0.2857142857142857, "recall": 1.0, "f1": 0.4444444444444445},
+      "champion_iou_0_30": {"tp": 1, "fp": 0, "fn": 5, "precision": 1.0, "recall": 0.16666666666666666, "f1": 0.2857142857142857}
+    }
+  },
+  "no_further_tuning_permitted": true,
+  "headline_claim_ready": false,
+  "headline_block_reason": "Only two final-holdout images with assistant-provisional component references; no independent human adjudication or production-scale sample size.",
+  "claim_boundary": "Independent holdout evidence demonstrates a generalization failure of the geometry prior. It is not a production performance estimate and does not support material, condition, corrosion, defect, failure, or safety-risk claims."
+}
