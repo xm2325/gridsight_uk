@@ -1,4 +1,4 @@
-name: v3.4 Tiled YOLO26 Insulator Scale Ablation
+name: v3.4 Tiled YOLO26 Insulator Scale Ablation Fast
 
 on:
   pull_request:
@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       epochs:
-        description: "Tiled one-class insulator specialist epochs"
+        description: "Fast tiled one-class insulator specialist epochs"
         required: false
-        default: "80"
+        default: "10"
 
 permissions:
   contents: read
@@ -22,9 +22,9 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
 
 jobs:
-  tiled-insulator-scale-ablation:
+  tiled-insulator-scale-ablation-fast:
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -61,21 +61,19 @@ jobs:
               shutil.copy2(src,Path('weights')/name)
           PY
           sha256sum weights/*.pt
-      - name: Train supervised 2x2 tiled insulator detector and select operating point on validation only
+      - name: Fast 10-epoch 2x2 tiled insulator scale test
         env:
-          EPOCHS: ${{ github.event_name == 'workflow_dispatch' && inputs.epochs || '80' }}
+          EPOCHS: ${{ github.event_name == 'workflow_dispatch' && inputs.epochs || '10' }}
         run: python scripts/v34_tiled_insulator_specialist.py --epochs "$EPOCHS"
       - uses: actions/upload-artifact@v4
         with:
-          name: v34-tiled-yolo26-insulator-specialist
+          name: v34-fast-tiled-yolo26-insulator
           path: |
             reports/v3_4_dev_parent_crop.jpg
             reports/v3_4_tiled_insulator_POS_2326530.jpg
             reports/v3_4_tiled_insulator_metrics.json
             runs/v3_4_yolo26n_tiled_insulator/results.csv
             runs/v3_4_yolo26n_tiled_insulator/weights/*.pt
-            weights/yolo26n.pt
-            weights/yoloe-26n-seg.pt
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
