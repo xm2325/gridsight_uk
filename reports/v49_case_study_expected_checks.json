@@ -1,0 +1,13 @@
+{
+  "version": "v4.9-case-study-expected-checks",
+  "expected_case_count": 16,
+  "featured_cases": ["POS_2326530", "POS_3437435", "POS_8091164", "POS_2952166"],
+  "required_unspent_holdout": "POS_7630781",
+  "required_unspent_holdout_result": "NOT RUN",
+  "adaptive_material_expected_correct": {
+    "siglip2_text_prompt_prototype": "6/6",
+    "siglip2_image_reference_prototype": "2/6",
+    "siglip2_equal_weight_text_image_hybrid": "3/6"
+  },
+  "claim_boundary": "Portfolio checks only. These values must be regenerated from the evidence pipeline and do not upgrade adaptive-development or assistant-provisional evidence into production estimates."
+}
