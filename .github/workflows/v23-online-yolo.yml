@@ -1,4 +1,4 @@
-name: v3.8 Frozen Final Holdout Evaluation
+name: v3.9 Post-Final Holdout Evidence Lock
 
 on:
   pull_request:
@@ -9,72 +9,30 @@ permissions:
   contents: read
 
 concurrency:
-  group: v38-final-holdout-${{ github.ref }}
+  group: v39-post-final-lock-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  PYTHONUNBUFFERED: "1"
-  PIP_DISABLE_PIP_VERSION_CHECK: "1"
-
 jobs:
-  frozen-final-holdout:
+  post-final-lock:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: pip
-          cache-dependency-path: requirements-yolo.txt
-      - name: Hydrate development/training sources used only to reconstruct frozen geometry prior
-        run: python scripts/v23_download_frozen_images.py
-      - name: Validate development dataset contract
-        run: python scripts/v23_validate_pack.py
-      - name: Confirm final holdout is still untouched before frozen evaluation
+      - name: Verify final-holdout contracts remain frozen
         shell: bash
         run: |
           test -f data/final_holdout/final_holdout_freeze.json
           test -f data/final_holdout/champion_freeze_v38.json
-          test ! -e data/final_holdout/images/POS_3437435.jpg
-          test ! -e data/final_holdout/images/POS_7561805.jpg
-      - name: Install CPU PyTorch
-        run: python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
-      - name: Install Ultralytics and text-prompt dependencies
+          grep -q '"frozen_before_final_holdout_inference": true' data/final_holdout/champion_freeze_v38.json
+          grep -q '"post_evaluation_rule"' data/final_holdout/champion_freeze_v38.json
+      - name: Enforce no automatic final-holdout inference after v3.8
         shell: bash
         run: |
-          python -m pip install -r requirements-yolo.txt
-          python -m pip install 'git+https://github.com/ultralytics/CLIP.git'
-      - name: Download and verify official frozen YOLOE-26n-seg checkpoint
-        shell: bash
-        run: |
-          mkdir -p weights
-          python - <<'PY'
-          from pathlib import Path
-          from ultralytics import YOLOE
-          import shutil
-          name='yoloe-26n-seg.pt'
-          m=YOLOE(name); del m
-          src=Path(name)
-          if not src.exists(): raise SystemExit(f'missing {name}')
-          shutil.copy2(src,Path('weights')/name)
-          PY
-          echo 'Expected: 1741c1f8da3cea47e2c01829c334a50dc0b9bbd05e685b90a3ce84fae32c8c1b'
-          sha256sum weights/yoloe-26n-seg.pt
-          test "$(sha256sum weights/yoloe-26n-seg.pt | awk '{print $1}')" = "1741c1f8da3cea47e2c01829c334a50dc0b9bbd05e685b90a3ce84fae32c8c1b"
-      - name: ONE-SHOT FINAL EVALUATION - do not tune from these results
-        run: python scripts/v38_final_holdout_eval.py
-      - uses: actions/upload-artifact@v4
-        with:
-          name: v38-frozen-final-holdout
-          path: |
-            reports/v3_8_final_holdout_metrics.json
-            reports/v3_8_POS_3437435_tower_roi.jpg
-            reports/v3_8_POS_7561805_tower_roi.jpg
-            reports/v3_8_final_POS_3437435_champion.jpg
-            reports/v3_8_final_POS_3437435_prediction_vs_reference.jpg
-            reports/v3_8_final_POS_7561805_champion.jpg
-            reports/v3_8_final_POS_7561805_prediction_vs_reference.jpg
-          if-no-files-found: error
-          compression-level: 0
-          retention-days: 90
+          if grep -R "v38_final_holdout_eval.py" .github/workflows; then
+            echo 'ERROR: post-final workflows must not automatically re-run the frozen holdout evaluator.' >&2
+            exit 1
+          fi
+          echo 'Final holdout is locked. Further commits may analyze frozen results but may not tune or re-run them as final evidence.'
