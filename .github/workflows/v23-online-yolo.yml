@@ -28,7 +28,7 @@ jobs:
           test -f data/final_holdout/champion_freeze_v38.json
           test -f reports/v3_8_final_holdout_summary.json
           grep -q '"no_further_tuning_permitted": true' reports/v3_8_final_holdout_summary.json
-          if grep -R "v38_final_holdout_.*eval.py" .github/workflows; then
+          if grep -RE "python[[:space:]].*v38_final_holdout.*\.py" .github/workflows; then
             echo 'ERROR: retired v3.8 holdout evaluator must not be reachable from v4 workflows.' >&2
             exit 1
           fi
