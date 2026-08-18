@@ -12,6 +12,7 @@ on:
       - 'scripts/v46_build_self_contained_showcase.py'
       - 'scripts/v46_build_pages_site.py'
       - 'scripts/v48_build_full_dataset_gallery.py'
+      - 'scripts/v49_build_case_study_explorer.py'
       - 'configs/v46_siglip2_material_crop_protocol.json'
       - 'data/image_sources.json'
       - 'data/final_holdout/final_holdout_freeze.json'
@@ -19,6 +20,9 @@ on:
       - 'data/v4_holdout/detection_holdout_freeze_v44.json'
       - 'reports/v3_8_final_holdout_summary.json'
       - 'reports/v3_9_morphology_shift.md'
+      - 'reports/v4_2_preadaptation_summary.json'
+      - 'reports/v4_3_morphology_diversity_summary.json'
+      - 'reports/v4_4_pixel_review.json'
   workflow_dispatch:
 
 permissions:
@@ -79,6 +83,8 @@ jobs:
         run: python scripts/v46_build_pages_site.py
       - name: Add all-source dataset gallery and provenance
         run: python scripts/v48_build_full_dataset_gallery.py
+      - name: Add dataset-to-decision case-study explorer
+        run: python scripts/v49_build_case_study_explorer.py
       - name: Verify Pages payload
         shell: bash
         run: |
@@ -87,30 +93,41 @@ jobs:
           test -s _site/assets/POS_2952166.jpg
           test -s _site/assets/POS_8090535.jpg
           test -s _site/assets/POS_7630781.jpg
+          test -s _site/assets/dataset/cases.json
           grep -q '<svg id="overlay"' _site/index.html
           grep -q 'Tower gallery' _site/index.html
           grep -q 'Magnified prediction crops' _site/index.html
           grep -q 'All 16 source images' _site/index.html
           grep -q 'Data provenance contract' _site/index.html
+          grep -q 'Case-study explorer' _site/index.html
+          grep -q 'Every source has a reason to exist' _site/index.html
+          grep -q 'unspent frozen holdout' _site/index.html
+          grep -q 'Open case study' _site/index.html
           grep -q 'offline.html' _site/index.html
           python - <<'PY'
           import json
           from pathlib import Path
           p=Path('_site/index.html')
-          if p.stat().st_size > 320_000:
+          if p.stat().st_size > 420_000:
               raise SystemExit(f'index.html too large: {p.stat().st_size}')
           detail=sorted(Path('_site/assets').glob('POS_*_detail_*.webp'))
           full=sorted(Path('_site/assets/dataset/full').glob('POS_*.jpg'))
           thumbs=sorted(Path('_site/assets/dataset/thumbs').glob('POS_*.webp'))
           manifest=json.loads(Path('_site/assets/dataset/manifest.json').read_text())
+          cases=json.loads(Path('_site/assets/dataset/cases.json').read_text())
           if len(detail) != 12:
               raise SystemExit(f'Expected 12 detail crops, found {len(detail)}')
           if len(full) != 16 or len(thumbs) != 16:
               raise SystemExit(f'Expected 16 full + 16 thumb dataset images, found {len(full)} + {len(thumbs)}')
-          if manifest['unique_source_images'] != 16:
-              raise SystemExit('Dataset manifest source count is not 16')
+          if manifest['unique_source_images'] != 16 or cases['case_count'] != 16:
+              raise SystemExit('Dataset or case-study source count is not 16')
+          if p.read_text().count('class="case-open"') != 16:
+              raise SystemExit('Expected one case-study button per dataset card')
+          if cases['cases']['POS_7630781']['metrics'][-1]['value'] != 'NOT RUN':
+              raise SystemExit('Unspent detection holdout must remain unrun')
           print(f'index.html: {p.stat().st_size:,} bytes')
           print(f'legacy verified Commons originals: {manifest["legacy_verified_commons_originals"]}/7')
+          print(f'case studies: {cases["case_count"]} / featured {len(cases["featured"])}')
           print(f'detail crops: {len(detail)} / {sum(x.stat().st_size for x in detail):,} bytes')
           print(f'dataset thumbs: {len(thumbs)} / {sum(x.stat().st_size for x in thumbs):,} bytes')
           print(f'dataset full images: {len(full)} / {sum(x.stat().st_size for x in full):,} bytes')
