@@ -48,7 +48,6 @@ jobs:
           retention-days: 30
 
   download-checkpoints:
-    needs: hydrate-and-validate-data
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
