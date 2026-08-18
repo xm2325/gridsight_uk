@@ -1,4 +1,4 @@
-name: v2.9 Acquire Unseen UK Tower Candidates
+name: v3.0 YOLOE-26 Visual-Prompt UK Components
 
 on:
   pull_request:
@@ -9,26 +9,63 @@ permissions:
   contents: read
 
 concurrency:
-  group: v29-unseen-candidates-${{ github.ref }}
+  group: v30-yoloe-visual-prompt-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  PYTHONUNBUFFERED: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
 jobs:
-  acquire-unseen-candidates:
+  yoloe-visual-prompt-components:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Download six geographically diverse unseen Geograph tower candidates
-        run: python scripts/v29_acquire_unseen_candidates.py
+          cache: pip
+          cache-dependency-path: requirements-yolo.txt
+      - name: Hydrate development train/val/showcase sources only
+        run: python scripts/v23_download_frozen_images.py
+      - name: Validate current 5 train / 1 val / 1 development contract
+        run: python scripts/v23_validate_pack.py
+      - name: Verify final holdout remains separate and untouched
+        shell: bash
+        run: |
+          test -f data/final_holdout/final_holdout_freeze.json
+          test ! -e data/images/test/POS_3437435.jpg
+          test ! -e data/images/test/POS_7561805.jpg
+      - name: Install CPU PyTorch
+        run: python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
+      - name: Install Ultralytics stack
+        run: python -m pip install -r requirements-yolo.txt
+      - name: Download official YOLOE-26n-seg checkpoint
+        shell: bash
+        run: |
+          mkdir -p weights
+          python - <<'PY'
+          from pathlib import Path
+          from ultralytics import YOLOE
+          import shutil
+          m=YOLOE('yoloe-26n-seg.pt'); del m
+          src=Path('yoloe-26n-seg.pt')
+          if not src.exists(): raise SystemExit('checkpoint missing')
+          shutil.copy2(src,Path('weights')/src.name)
+          PY
+          sha256sum weights/yoloe-26n-seg.pt
+      - name: Run UK component visual prompting from training reference POS_190181
+        run: python scripts/v30_yoloe_visual_prompt_components.py
       - uses: actions/upload-artifact@v4
         with:
-          name: v29-unseen-candidate-images
+          name: v30-yoloe-visual-prompt-components
           path: |
-            reports/v2_9_unseen_candidates/*.jpg
-            reports/v2_9_unseen_candidate_manifest.json
+            reports/v3_0_visual_prompt_target_roi.jpg
+            reports/v3_0_yoloe_visual_prompt_POS_2326530.jpg
+            reports/v3_0_yoloe_visual_prompt_roi_native.jpg
+            reports/v3_0_yoloe_visual_prompt_metrics.json
+            weights/yoloe-26n-seg.pt
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
