@@ -1,4 +1,4 @@
-name: v4.9 Case-study Explorer and SigLIP2 Evidence
+name: v4.10 Primary 16-image Gallery and SigLIP2 Evidence
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: v49-case-study-${{ github.ref }}
+  group: v410-primary-gallery-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -77,25 +77,33 @@ jobs:
         run: python scripts/v48_build_full_dataset_gallery.py
       - name: Add all 16 dataset-to-decision case studies
         run: python scripts/v49_build_case_study_explorer.py
-      - name: Verify full case-study explorer
+      - name: Promote all 16 sources to the primary gallery
+        run: python scripts/v50_promote_full_gallery.py
+      - name: Verify primary 16-image gallery
         shell: bash
         run: |
           test -s _site/index.html
           test -s _site/offline.html
           test -s _site/assets/dataset/cases.json
-          grep -q 'All 16 source images' _site/index.html
+          grep -q 'Full source gallery · all 16 images' _site/index.html
+          grep -q 'Gallery · 16' _site/index.html
+          grep -q 'All 16 project source images' _site/index.html
           grep -q 'Data provenance contract' _site/index.html
           grep -q 'Case-study explorer' _site/index.html
-          grep -q 'Every source has a reason to exist' _site/index.html
           grep -q 'POS_2326530' _site/index.html
           grep -q 'POS_3437435' _site/index.html
           grep -q 'POS_7630781' _site/index.html
           grep -q 'unspent frozen holdout' _site/index.html
           grep -q "getElementById('modal-img')" _site/index.html
+          if grep -q 'Three source images, three tower configurations' _site/index.html; then
+            echo 'ERROR: old three-image gallery is still present.' >&2
+            exit 1
+          fi
           python - <<'PY'
           import json
           from pathlib import Path
           p=Path('_site/index.html')
+          text=p.read_text()
           if p.stat().st_size > 420_000:
               raise SystemExit(f'Online index too large: {p.stat().st_size}')
           detail=sorted(Path('_site/assets').glob('POS_*_detail_*.webp'))
@@ -109,14 +117,19 @@ jobs:
               raise SystemExit(f'Expected 16 full + 16 thumbs, found {len(full)} + {len(thumbs)}')
           if manifest['unique_source_images'] != 16 or cases['case_count'] != 16:
               raise SystemExit('Manifest/case source count mismatch')
-          if p.read_text().count('class="case-open"') != 16:
-              raise SystemExit('Expected 16 dataset case buttons')
+          if text.count('class="dataset-card"') != 16:
+              raise SystemExit('Expected 16 cards in the primary Gallery section')
+          if text.count('<section id="gallery"') != 1 or '<section id="dataset">' in text:
+              raise SystemExit('Expected one promoted Gallery section and no separate Dataset section')
+          if text.count('class="case-open"') != 16:
+              raise SystemExit('Expected 16 gallery case-study buttons')
           if cases['cases']['POS_7630781']['metrics'][-1]['value'] != 'NOT RUN':
               raise SystemExit('POS_7630781 must remain an unspent holdout')
           m=cases['cases']['POS_2952166']['metrics']
           if [x['value'] for x in m[:3]] != ['6/6','2/6','3/6']:
               raise SystemExit('Unexpected adaptive material summary')
           print(f'Online index: {p.stat().st_size:,} bytes')
+          print('Primary gallery cards: 16/16')
           print(f'Legacy verified Commons originals: {manifest["legacy_verified_commons_originals"]}/7')
           print(f'Case studies: {cases["case_count"]}; featured: {len(cases["featured"])}')
           print(f'Dataset thumbs: {len(thumbs)} / {sum(x.stat().st_size for x in thumbs):,} bytes')
@@ -124,7 +137,7 @@ jobs:
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: v49-case-study-explorer-preview
+          name: v410-primary-16-image-gallery-preview
           path: |
             reports/v4_6_siglip2_material_crop_results.json
             reports/GridSight_UK_v46_SELF_CONTAINED_SHOWCASE.html
