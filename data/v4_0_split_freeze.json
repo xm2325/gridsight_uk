@@ -1,0 +1,46 @@
+{
+  "version": "v4.0-morphology-diverse-split-freeze",
+  "frozen_before_v4_model_inference": true,
+  "selection_basis": "Pixel-level assistant review of tower presence, morphology and component annotatability plus source geography. No v4 model outputs existed when roles were selected.",
+  "assistant_review_provisional": true,
+  "old_v3_final_holdout_retired": ["POS_3437435", "POS_7561805"],
+  "split_release_sha256": "6fea4b65577e616be236b1bda18e889a45d74a8e7a6bdcdc2f93d5f942a7828c",
+  "legacy_training_sources": [
+    {"record_id":"POS_1283842","image_sha256":"0a1e324cec49cf5d6345b0761b2f32058313a1f5fadeb45fb5addbdfc79b0d30"},
+    {"record_id":"POS_190181","image_sha256":"ff104f724946d82d0270fbec87c6af6af3db3cd184e6e85137eb15aed92fbb2b"},
+    {"record_id":"POS_7060068","image_sha256":"511491fd2cf5834874c7640cd972d8718634a44c5a59bb1fff1652f7c438101e"},
+    {"record_id":"POS_3778704","image_sha256":"da13f8a8845953672a64353280dee58386809ac48a8639037fdbae5f4a056eb6"},
+    {"record_id":"POS_291727","image_sha256":"89177b29868e2e149cb93e1994c00c64066e52384f03182e558da1431dcb2277"},
+    {"record_id":"POS_5442616","image_sha256":"54941bfcc8f6da9e38c247f523c2a252215208adf35a9850790b76a4be1c4d95"},
+    {"record_id":"POS_2326530","image_sha256":"68976d1a7a43ef5ee73e1d2d8b71b43ac82303b18e6091418a6968371466b2bc"}
+  ],
+  "new_training_sources": [
+    {"record_id":"POS_6610209","country":"Wales","morphology":"complex_mixed_diagonal_strain_suspension","image_sha256":"091a4fccce53d7f35d2f2aaffadb32d0849f24e16f5d481e8376806300bb235d"},
+    {"record_id":"POS_5952661","country":"England","morphology":"suspension_angled_view","image_sha256":"53a396cb1b42a510d5529c794acd31275a10f50d5bd05a321941bfab151edbc4"},
+    {"record_id":"POS_7480474","country":"England","morphology":"suspension_angled_view","image_sha256":"99b62979b21c9fe0d190a1eecce27b3290a1bc6e36bc88c460de0c54a9be52d9"},
+    {"record_id":"POS_1352733","country":"England","morphology":"low_angle_partial_tower","image_sha256":"39e7b071e6ec49d60bccb63eab300af768f3639c19863cd72fda755a7a58c549"}
+  ],
+  "validation_sources": [
+    {"record_id":"POS_354803","country":"England","morphology":"canonical_suspension_front_view","image_sha256":"165648a66f22712dd34f36ed5ea8ee5916ac083f737fc1ec2f3af2f9a8f3442b"},
+    {"record_id":"POS_543992","country":"England","morphology":"conventional_suspension_midscale","image_sha256":"81ed550af775a8c1108f3528770463d0fa6ac187b9087922f58a225822940f8e"}
+  ],
+  "final_holdout_sources": [
+    {"record_id":"POS_8091164","country":"England","morphology":"asymmetric_three_arm_suspension","image_sha256":"837d6808d5ddc32a3eaa83c29f576970d277864e6dbf2e74c0abedad47313aa9"},
+    {"record_id":"POS_8239540","country":"England","morphology":"narrow_compact_suspension","image_sha256":"de32e9025ebc471d97967d7e3b3409874d8a873c8f48d8d8e4149c27920fed09"}
+  ],
+  "reserve_sources": [
+    {"record_id":"POS_7072688","reason":"scale_blur","image_sha256":"962979f5a07254bda03cd5c0e3c28aeb29c8c7246af8e3d24f26334b13974d83"},
+    {"record_id":"POS_7478407","reason":"far_scale","image_sha256":"7e32a0d6a8a08269f3252b166ca795c533ad32d645e55c2ef730aeb6b5b41101"},
+    {"record_id":"POS_7528296","reason":"clutter_scale","image_sha256":"60dd2326331eb133858be54d476ae6d6ba8d947057c2ea63ed31ce3a8c0a0423"},
+    {"record_id":"POS_4451265","reason":"multi_tower_scene","image_sha256":"2b3f50f516637fec5f98cad9200cb1a20bf93ae43358c0c09ae5d6a4cc999a80"},
+    {"record_id":"POS_7945993","reason":"terminal_candidate_low_component_detail","image_sha256":"c82a6e1b3b92325f1c0940bc1e8728d23110269cd0c5c6c79bf185d4bd7cea3c"},
+    {"record_id":"POS_4712773","reason":"far_scale","image_sha256":"51dc94fdab3f8d11d64db672780acf3c2896bd5b75d767c5e8f1c5c251a71ef5"},
+    {"record_id":"POS_8261555","reason":"narrow_low_component_detail","image_sha256":"33a09afc92753a6064a438297dacbb6fbcfe517edaac86820b15131f3397a683"}
+  ],
+  "rules": {
+    "legacy_sources": "The seven v2-v3 development sources may enter v4 training because their old cycle is closed; they may never regain validation or final status.",
+    "new_final_holdout": "POS_8091164 and POS_8239540 must not be used for v4 training, prompt/threshold selection, pseudo-label selection, error-driven tuning or morphology-prior fitting before one-shot final evaluation.",
+    "reserve": "Reserve sources require an explicit future role amendment made before any model sees that source. Current v4 final records cannot be amended into training.",
+    "claim_boundary": "Assistant component annotations remain provisional portfolio references until independent human adjudication. No material, condition, corrosion, defect, failure or safety-risk claim."
+  }
+}
