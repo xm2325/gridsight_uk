@@ -1,4 +1,4 @@
-name: v4.1 YOLOE Annotation-Aid Proposals
+name: v4.2 Frozen Pre-Adaptation Morphology Diagnostic
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: v41-annotation-aid-${{ github.ref }}
+  group: v42-preadaptation-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -17,7 +17,7 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
 
 jobs:
-  yoloe-annotation-aid:
+  frozen-preadaptation-diagnostic:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -30,13 +30,19 @@ jobs:
       - name: Preserve retired v3.8 holdout lock
         shell: bash
         run: |
-          test -f data/final_holdout/final_holdout_freeze.json
           test -f data/final_holdout/champion_freeze_v38.json
           grep -q '"no_further_tuning_permitted": true' reports/v3_8_final_holdout_summary.json
           if grep -RE "python[[:space:]].*v38_final_holdout.*\.py" .github/workflows; then
             echo 'ERROR: retired holdout evaluator reachable from v4 workflow.' >&2
             exit 1
           fi
+      - name: Verify pixel-adjudicated v4 annotations exist before evaluation
+        shell: bash
+        run: |
+          test -f data/v4_annotations/assistant_provisional_insulators.json
+          grep -q '"n_boxes": 7' data/v4_annotations/assistant_provisional_insulators.json
+          grep -q '"n_boxes": 3' data/v4_annotations/assistant_provisional_insulators.json
+          grep -q '"retired_v3_8_holdout_used": false' data/v4_annotations/assistant_provisional_insulators.json
       - name: Install CPU PyTorch
         run: python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
       - name: Install Ultralytics, CLIP and image dependencies
@@ -44,17 +50,9 @@ jobs:
         run: |
           python -m pip install -r requirements-yolo.txt
           python -m pip install 'git+https://github.com/ultralytics/CLIP.git'
-      - name: Re-acquire candidate pixels selected before model inference
+      - name: Re-acquire v4 candidate pixels and verify source hashes in annotation file
         run: python scripts/v40_acquire_morphology_candidates.py
-      - name: Verify pixel-review decision was committed before proposals
-        shell: bash
-        run: |
-          test -f reports/v4_0_pixel_review.json
-          grep -q '"record_id": "POS_6610209"' reports/v4_0_pixel_review.json
-          grep -q '"decision": "accept_new_training_morphology_stratum"' reports/v4_0_pixel_review.json
-          grep -q '"record_id": "POS_8091164"' reports/v4_0_pixel_review.json
-          grep -q '"decision": "accept_new_validation_candidate"' reports/v4_0_pixel_review.json
-      - name: Download and hash official YOLOE-26n-seg checkpoint
+      - name: Download and hash frozen YOLOE-26n-seg checkpoint
         shell: bash
         run: |
           mkdir -p weights
@@ -69,19 +67,19 @@ jobs:
           shutil.copy2(src,Path('weights')/name)
           PY
           echo '1741c1f8da3cea47e2c01829c334a50dc0b9bbd05e685b90a3ce84fae32c8c1b  weights/yoloe-26n-seg.pt' | sha256sum -c -
-      - name: Generate low-threshold component proposals for annotation review only
-        run: python scripts/v41_yoloe_annotation_aid.py
+      - name: Evaluate v3.8-frozen rules on new v4 morphology without retuning
+        run: python scripts/v42_preadaptation_morphology_diagnostic.py
       - uses: actions/upload-artifact@v4
         with:
-          name: v41-yoloe-annotation-aid
+          name: v42-frozen-preadaptation-morphology
           path: |
-            reports/v4_1_yoloe_annotation_aid.json
-            reports/v4_1_POS_6610209_tower_roi.jpg
-            reports/v4_1_POS_6610209_annotation_aid.jpg
-            reports/v4_1_POS_8091164_tower_roi.jpg
-            reports/v4_1_POS_8091164_annotation_aid.jpg
-            reports/v4_0_morphology_candidates/POS_6610209.jpg
-            reports/v4_0_morphology_candidates/POS_8091164.jpg
+            reports/v4_2_preadaptation_morphology_diagnostic.json
+            reports/v4_2_POS_6610209_tower_roi.jpg
+            reports/v4_2_POS_6610209_raw_frozen.jpg
+            reports/v4_2_POS_6610209_geometry_frozen.jpg
+            reports/v4_2_POS_8091164_tower_roi.jpg
+            reports/v4_2_POS_8091164_raw_frozen.jpg
+            reports/v4_2_POS_8091164_geometry_frozen.jpg
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
