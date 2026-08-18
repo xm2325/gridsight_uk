@@ -5,6 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 INDEX = ROOT / "_site" / "index.html"
+BUILD_ID = "v4.11-primary-16-gallery"
 
 
 def main() -> None:
@@ -60,6 +61,17 @@ def main() -> None:
         1,
     )
 
+    # Add a machine-readable and human-visible build marker so the deployed Pages version
+    # can be distinguished from a stale CDN/browser copy without guessing.
+    if '<head>' not in page or '</footer>' not in page:
+        raise RuntimeError("Could not locate head/footer for build marker")
+    page = page.replace('<head>', f'<head>\n<meta name="gridsight-build" content="{BUILD_ID}">', 1)
+    page = page.replace(
+        '</footer>',
+        f'<br><span class="small">Build · {BUILD_ID} · primary gallery 16/16</span></footer>',
+        1,
+    )
+
     # Guardrails against accidentally shipping the confusing old presentation again.
     if 'Three source images, three tower configurations' in page:
         raise RuntimeError("Old three-image gallery heading still present")
@@ -73,9 +85,12 @@ def main() -> None:
         raise RuntimeError("Primary gallery does not contain all 16 source cards")
     if page.count('class="case-open"') != 16:
         raise RuntimeError("Primary gallery lost one or more case-study controls")
+    if page.count(BUILD_ID) != 2:
+        raise RuntimeError("Expected build marker in meta tag and visible footer")
 
     INDEX.write_text(page, encoding="utf-8")
     print({
+        "build_id": BUILD_ID,
         "primary_gallery_cards": page.count('class="dataset-card"'),
         "case_buttons": page.count('class="case-open"'),
         "old_three_image_gallery_removed": True,
