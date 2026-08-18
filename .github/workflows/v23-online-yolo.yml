@@ -1,4 +1,4 @@
-name: v3.9 Post-Final Generalization Audit
+name: v4.6 SigLIP2 Material Crop Classification
 
 on:
   pull_request:
@@ -9,45 +9,91 @@ permissions:
   contents: read
 
 concurrency:
-  group: v39-post-final-audit-${{ github.ref }}
+  group: v46-siglip2-material-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  PYTHONUNBUFFERED: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  HF_HOME: ${{ github.workspace }}/.hf-cache
+
 jobs:
-  post-final-audit:
+  siglip2-material-crops:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install audit-only dependency
-        run: python -m pip install 'numpy>=2,<3'
-      - name: Verify final-holdout contracts and persisted one-shot evidence
+      - name: Preserve retired detection holdouts and material evidence semantics
         shell: bash
         run: |
-          test -f data/final_holdout/final_holdout_freeze.json
-          test -f data/final_holdout/champion_freeze_v38.json
-          test -f reports/v3_8_final_holdout_summary.json
           grep -q '"no_further_tuning_permitted": true' reports/v3_8_final_holdout_summary.json
-          grep -q '"headline_claim_ready": false' reports/v3_8_final_holdout_summary.json
-      - name: Enforce no automatic final-holdout inference after v3.8
-        shell: bash
-        run: |
-          needle="v38_final_holdout_"'eval.py'
-          if grep -R "$needle" .github/workflows; then
-            echo 'ERROR: post-final workflows must not automatically re-run the frozen holdout evaluator.' >&2
+          test -f configs/v46_siglip2_material_crop_protocol.json
+          test -f data/v4_annotations/material_reference_v44.json
+          grep -q 'adaptive development only' configs/v46_siglip2_material_crop_protocol.json
+          if grep -RE "python[[:space:]].*v38_final_holdout.*\.py" .github/workflows; then
+            echo 'ERROR: retired v3.8 holdout evaluator reachable.' >&2
             exit 1
           fi
-          echo 'No final-holdout inference command is reachable from current workflows.'
-      - name: Run label-only morphology-shift audit
-        run: python scripts/v39_post_final_morphology_audit.py
+      - name: Install CPU PyTorch and SigLIP2 runtime
+        shell: bash
+        run: |
+          python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install 'transformers>=4.49,<5' 'sentencepiece>=0.2' 'safetensors>=0.4' 'Pillow>=10,<13'
+      - name: Re-acquire frozen material reference/development pixels
+        run: python scripts/v44_acquire_angle_material_candidates.py
+      - name: Verify exact reference and adaptive-development source hashes
+        shell: bash
+        run: |
+          echo '630191b16e8709ad040e80304df072318e6863216cc3f6394a20d553949dd3c2  reports/v4_4_angle_material_candidates/POS_8090535.jpg' | sha256sum -c -
+          echo '691c33cbd32767f0055219e2827fd5f6e788aef709d869eb325269e23af20f23  reports/v4_4_angle_material_candidates/POS_2952166.jpg' | sha256sum -c -
+      - name: Run frozen SigLIP2 NaFlex text, image-prototype and hybrid crop methods
+        run: python scripts/v46_siglip2_material_crops.py
+      - name: Build single-file evidence showcase
+        run: python scripts/v46_build_self_contained_showcase.py
+      - name: Verify self-contained showcase
+        shell: bash
+        run: |
+          test -s reports/GridSight_UK_v46_SELF_CONTAINED_SHOWCASE.html
+          grep -q 'data:image/jpeg;base64,' reports/GridSight_UK_v46_SELF_CONTAINED_SHOWCASE.html
+          if grep -Eq '<script[^>]+src=|<link[^>]+href=|src="https?://' reports/GridSight_UK_v46_SELF_CONTAINED_SHOWCASE.html; then
+            echo 'ERROR: external asset dependency found in showcase HTML.' >&2
+            exit 1
+          fi
+      - name: Build fast GitHub Pages preview
+        run: python scripts/v46_build_pages_site.py
+      - name: Verify Pages preview
+        shell: bash
+        run: |
+          test -s _site/index.html
+          test -s _site/offline.html
+          test -s _site/assets/POS_2952166.webp
+          grep -q '<svg id="overlay"' _site/index.html
+          grep -q 'offline.html' _site/index.html
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('_site/index.html')
+          if p.stat().st_size > 250_000:
+              raise SystemExit(f'Online index too large: {p.stat().st_size}')
+          print(f'Online index: {p.stat().st_size:,} bytes')
+          print(f'WebP: {(Path("_site/assets/POS_2952166.webp").stat().st_size):,} bytes')
+          PY
       - uses: actions/upload-artifact@v4
         with:
-          name: v39-post-final-generalization-audit
+          name: v46-siglip2-material-crops
           path: |
-            reports/v3_8_final_holdout_summary.json
-            reports/v3_9_morphology_shift.json
-            reports/v3_9_morphology_shift.md
+            reports/v4_6_siglip2_material_crop_results.json
+            reports/v4_6_siglip2_text_prompt_prototype_POS_2952166.jpg
+            reports/v4_6_siglip2_image_reference_prototype_POS_2952166.jpg
+            reports/v4_6_siglip2_equal_weight_text_image_hybrid_POS_2952166.jpg
+            reports/GridSight_UK_v46_SELF_CONTAINED_SHOWCASE.html
+            _site/index.html
+            _site/offline.html
+            _site/assets/POS_2952166.webp
+            _site/assets/POS_2952166.jpg
+            _site/assets/material_results.json
           if-no-files-found: error
-          retention-days: 90
+          compression-level: 0
+          retention-days: 30

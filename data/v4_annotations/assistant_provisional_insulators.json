@@ -1,0 +1,44 @@
+{
+  "version": "v4.2-assistant-provisional-insulator-annotations",
+  "ontology": {
+    "target_class": "overhead_line_insulator_assembly",
+    "included": "Visible line-attached insulator strings/assemblies, including vertical suspension and horizontal/diagonal strain-like assemblies.",
+    "excluded": "Substation/gantry post insulators and ambiguous equipment not clearly serving as an overhead-line insulator assembly."
+  },
+  "annotation_process": "Candidate selection was committed from direct pixel review before model proposals. YOLOE-26 v4.1 proposals were then used only as an annotation aid. Final boxes below were manually accepted/corrected against source pixels; proposals were not auto-converted to ground truth.",
+  "claim_boundary": "Assistant-provisional portfolio reference only; not independently adjudicated engineering ground truth; no material, condition, corrosion, defect, failure, or safety claim.",
+  "retired_v3_8_holdout_used": false,
+  "records": [
+    {
+      "record_id": "POS_6610209",
+      "role": "new_training_morphology_stratum",
+      "country": "Wales",
+      "source_sha256": "091a4fccce53d7f35d2f2aaffadb32d0849f24e16f5d481e8376806300bb235d",
+      "dimensions": [428, 640],
+      "n_boxes": 7,
+      "boxes_xyxy": [
+        {"id": "661_i01", "orientation": "diagonal_strain_like", "xyxy": [190, 45, 232, 74], "visibility": "clear"},
+        {"id": "661_i02", "orientation": "diagonal_strain_like", "xyxy": [226, 77, 280, 110], "visibility": "clear"},
+        {"id": "661_i03", "orientation": "vertical_suspension_like", "xyxy": [305, 108, 321, 149], "visibility": "clear"},
+        {"id": "661_i04", "orientation": "diagonal_strain_like", "xyxy": [145, 141, 175, 164], "visibility": "clear"},
+        {"id": "661_i05", "orientation": "diagonal_strain_like", "xyxy": [218, 173, 258, 202], "visibility": "clear"},
+        {"id": "661_i06", "orientation": "diagonal_strain_like", "xyxy": [112, 209, 168, 237], "visibility": "clear"},
+        {"id": "661_i07", "orientation": "vertical_suspension_like", "xyxy": [251, 213, 266, 263], "visibility": "clear"}
+      ],
+      "excluded_visible_objects": "Large porcelain/brown post insulators on the lower substation-like gantry are intentionally excluded from this overhead-line string ontology."
+    },
+    {
+      "record_id": "POS_8091164",
+      "role": "new_validation_candidate",
+      "country": "England",
+      "source_sha256": "837d6808d5ddc32a3eaa83c29f576970d277864e6dbf2e74c0abedad47313aa9",
+      "dimensions": [640, 480],
+      "n_boxes": 3,
+      "boxes_xyxy": [
+        {"id": "809_i01", "orientation": "vertical_suspension_like", "xyxy": [213, 116, 224, 177], "visibility": "clear"},
+        {"id": "809_i02", "orientation": "vertical_suspension_like", "xyxy": [377, 68, 390, 132], "visibility": "clear"},
+        {"id": "809_i03", "orientation": "vertical_suspension_like", "xyxy": [402, 164, 415, 227], "visibility": "clear"}
+      ]
+    }
+  ]
+}

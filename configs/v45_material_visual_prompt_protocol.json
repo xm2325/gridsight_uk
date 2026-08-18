@@ -1,0 +1,48 @@
+{
+  "version": "v4.5-material-visual-prompt-protocol",
+  "frozen_before_material_inference": true,
+  "model": {
+    "name": "yoloe-26n-seg.pt",
+    "sha256": "1741c1f8da3cea47e2c01829c334a50dc0b9bbd05e685b90a3ce84fae32c8c1b",
+    "task": "visual-prompt instance segmentation / localisation"
+  },
+  "material_ontology": ["glass", "ceramic_family"],
+  "reference": {
+    "record_id": "POS_8090535",
+    "annotations": "data/v4_annotations/material_reference_v44.json",
+    "n_glass": 3,
+    "n_ceramic_family": 3
+  },
+  "independent_evaluation": {
+    "record_id": "POS_2952166",
+    "freeze": "data/v4_holdout/material_eval_freeze_v44.json",
+    "n_glass": 3,
+    "n_ceramic_family": 3
+  },
+  "methods": [
+    {
+      "name": "joint_two_class_vpe",
+      "description": "One YOLOE visual-prompt pass with all six reference boxes and class IDs glass=0, ceramic_family=1."
+    },
+    {
+      "name": "class_isolated_vpe",
+      "description": "Two independent YOLOE visual-prompt passes, each using the three reference boxes from one material class, followed by within-class NMS and union."
+    }
+  ],
+  "inference": {
+    "imgsz": 960,
+    "confidence_floor": 0.005,
+    "nms_iou": 0.30,
+    "max_detections_per_pass": 50,
+    "device": "cpu"
+  },
+  "evaluation": {
+    "box_iou_thresholds": [0.30, 0.50],
+    "class_aware_matching": true,
+    "metrics": ["precision", "recall", "f1", "per_material_counts"],
+    "score_semantics": "raw YOLOE model score; uncalibrated and not a probability",
+    "selection_rule": "Report both preregistered methods. Do not select/tune a method, threshold, reference box, prompt class mapping or NMS setting using POS_2952166 if claiming independent evaluation."
+  },
+  "display_rule": "Renderer may display raw score as a percentage-like numeric model score for visual comparison with industrial overlays, but every showcase must state UNCALIBRATED MODEL SCORE and SOURCE-ASSISTED MATERIAL REFERENCE.",
+  "claim_boundary": "Material-subtype portfolio experiment only; ceramic_family intentionally covers source-described ceramic/porcelain family. No material claim beyond the source-assisted reference, and no condition/defect/corrosion/failure/safety claim."
+}

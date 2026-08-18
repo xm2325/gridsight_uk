@@ -1,0 +1,16 @@
+{
+  "version": "v4.4-material-evaluation-freeze",
+  "frozen_before_material_model_inference": true,
+  "record_id": "POS_2952166",
+  "source_sha256": "691c33cbd32767f0055219e2827fd5f6e788aef709d869eb325269e23af20f23",
+  "dimensions": [627, 640],
+  "material_task": ["glass", "ceramic_family"],
+  "labels_path": "data/v4_annotations/material_reference_v44.json",
+  "n_evaluation_assemblies": 6,
+  "class_balance": {"glass": 3, "ceramic_family": 3},
+  "reference_source_allowed_for_method_development": "POS_8090535",
+  "evaluation_source_forbidden_for_method_development": "POS_2952166",
+  "usage_rule": "No prompt wording, visual-prompt boxes, material classifier parameters, score thresholds, class prototypes or post-processing may be selected using POS_2952166 if results are reported as independent material evaluation. Report all predeclared methods rather than selecting a winner after seeing this source.",
+  "label_provenance": "Source-assisted and visually corroborated left/right material mapping; ceramic_family is intentionally broader than porcelain across sources.",
+  "claim_boundary": "Material-subtype portfolio experiment only. No condition, defect, corrosion, failure, reliability or safety claim."
+}

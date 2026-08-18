@@ -1,0 +1,45 @@
+{
+  "version": "v4.0-assistant-pixel-review",
+  "review_basis": "Direct visual inspection of pixels downloaded by GitHub Actions run 32110974514; no model inference was used for these selection decisions.",
+  "claim_boundary": "Assistant visual portfolio review only; not independent engineering inspection ground truth.",
+  "retired_v3_8_holdout_used": false,
+  "records": [
+    {
+      "record_id": "POS_6610209",
+      "country": "Wales",
+      "tower_present": true,
+      "component_annotatability": "high",
+      "morphology": ["close_range", "complex_structure", "horizontal_or_strain_like_insulators", "nonstandard_geometry"],
+      "decision": "accept_new_training_morphology_stratum",
+      "reason": "Most valuable candidate for addressing the v3.9 failure mode: visible horizontal/strain-like insulator morphology and substantially different component geometry from the five original training towers."
+    },
+    {
+      "record_id": "POS_8091164",
+      "country": "England",
+      "tower_present": true,
+      "component_annotatability": "high",
+      "morphology": ["close_range", "angle_or_compact_tower", "three_clear_vertical_insulator_strings", "vegetation_occlusion_at_base"],
+      "decision": "accept_new_validation_candidate",
+      "reason": "Clear component-level pixels with a tower design distinct from the original development set; useful as a new-cycle validation source rather than another near-duplicate training tower."
+    },
+    {
+      "record_id": "POS_7072688",
+      "country": "Scotland",
+      "tower_present": true,
+      "component_annotatability": "low",
+      "morphology": ["long_range", "small_component_scale", "slender_tower"],
+      "decision": "retain_scale_stress_only",
+      "reason": "Parent tower is visible but individual component pixels are too small for reliable manual component boxes at this image resolution."
+    },
+    {
+      "record_id": "POS_7478407",
+      "country": "Scotland",
+      "tower_present": true,
+      "component_annotatability": "very_low",
+      "morphology": ["extreme_long_range", "very_small_component_scale", "landscape_context"],
+      "decision": "retain_extreme_scale_stress_only",
+      "reason": "Useful as a deployment-scale stress image but not suitable for component ground truth because the tower occupies too few pixels."
+    }
+  ],
+  "next_step": "Run low-threshold YOLOE-26 component proposals only on POS_6610209 and POS_8091164 as annotation aids, then visually accept/correct boxes before any label becomes assistant-provisional GT."
+}

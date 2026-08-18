@@ -1,0 +1,110 @@
+name: Deploy GridSight-UK Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/deploy-pages.yml'
+      - 'scripts/v44_acquire_angle_material_candidates.py'
+      - 'scripts/v46_siglip2_material_crops.py'
+      - 'scripts/v46_build_self_contained_showcase.py'
+      - 'scripts/v46_build_pages_site.py'
+      - 'configs/v46_siglip2_material_crop_protocol.json'
+      - 'data/v4_annotations/material_reference_v44.json'
+      - 'reports/v3_8_final_holdout_summary.json'
+      - 'reports/v3_9_morphology_shift.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  PYTHONUNBUFFERED: '1'
+  PIP_DISABLE_PIP_VERSION_CHECK: '1'
+  HF_HOME: ${{ github.workspace }}/.hf-cache
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6
+
+      - name: Cache SigLIP2 checkpoint
+        uses: actions/cache@v4
+        with:
+          path: .hf-cache
+          key: ${{ runner.os }}-siglip2-base-patch16-naflex-v1
+
+      - name: Install CPU inference runtime
+        shell: bash
+        run: |
+          python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install 'transformers>=4.49,<5' 'sentencepiece>=0.2' 'safetensors>=0.4' 'Pillow>=10,<13'
+
+      - name: Re-acquire exact v4.6 source pixels
+        run: python scripts/v44_acquire_angle_material_candidates.py
+
+      - name: Verify source hashes
+        shell: bash
+        run: |
+          echo '630191b16e8709ad040e80304df072318e6863216cc3f6394a20d553949dd3c2  reports/v4_4_angle_material_candidates/POS_8090535.jpg' | sha256sum -c -
+          echo '691c33cbd32767f0055219e2827fd5f6e788aef709d869eb325269e23af20f23  reports/v4_4_angle_material_candidates/POS_2952166.jpg' | sha256sum -c -
+
+      - name: Reproduce v4.6 material evidence
+        run: python scripts/v46_siglip2_material_crops.py
+
+      - name: Build offline self-contained evidence page
+        run: python scripts/v46_build_self_contained_showcase.py
+
+      - name: Build fast online Pages site
+        run: python scripts/v46_build_pages_site.py
+
+      - name: Verify Pages payload
+        shell: bash
+        run: |
+          test -s _site/index.html
+          test -s _site/offline.html
+          test -s _site/assets/POS_2952166.webp
+          test -s _site/assets/POS_2952166.jpg
+          grep -q '<svg id="overlay"' _site/index.html
+          grep -q 'offline.html' _site/index.html
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('_site/index.html')
+          size = p.stat().st_size
+          if size > 250_000:
+              raise SystemExit(f'index.html too large: {size} bytes')
+          print(f'index.html: {size:,} bytes')
+          for q in sorted(Path('_site/assets').glob('*')):
+              print(f'{q}: {q.stat().st_size:,} bytes')
+          PY
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

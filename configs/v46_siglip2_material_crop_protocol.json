@@ -1,0 +1,42 @@
+{
+  "version": "v4.6-siglip2-material-crop-development",
+  "evaluation_semantics": "adaptive development only because POS_2952166 was already consumed by v4.5 visual-prompt evaluation; no independent-holdout claim",
+  "model": {
+    "id": "google/siglip2-base-patch16-naflex",
+    "purpose": "frozen vision-language encoder for fine-grained material crop classification",
+    "weights_frozen": true
+  },
+  "reference_source": "POS_8090535",
+  "adaptive_development_source": "POS_2952166",
+  "annotation_path": "data/v4_annotations/material_reference_v44.json",
+  "crop": {
+    "box_padding_fraction_each_side": 0.50,
+    "minimum_padding_px": 4,
+    "preserve_aspect_ratio": true
+  },
+  "classes": ["glass", "ceramic_family"],
+  "zero_shot_prompt_ensemble": {
+    "glass": [
+      "a close-up photograph of a high-voltage glass insulator",
+      "a green or blue-tinted glass suspension insulator",
+      "an electrical insulator made of glass"
+    ],
+    "ceramic_family": [
+      "a close-up photograph of a high-voltage porcelain insulator",
+      "a brown glazed ceramic suspension insulator",
+      "an electrical insulator made of porcelain or ceramic"
+    ]
+  },
+  "methods": [
+    "siglip2_text_prompt_prototype",
+    "siglip2_image_reference_prototype",
+    "siglip2_equal_weight_text_image_hybrid"
+  ],
+  "prototype_rule": "L2-normalise each SigLIP2 pooled embedding; average the three reference embeddings per material class; L2-normalise the class mean.",
+  "hybrid_rule": "For each evaluation crop, compute cosine similarity to the text class prototype and image class prototype, z-normalise each two-class score vector within the crop, then average the two score vectors equally.",
+  "decision_rule": "argmax over the two material classes; no threshold tuning",
+  "display_score": "two-class softmax of method scores for visual readability only; explicitly labelled relative/un-calibrated score",
+  "metrics": ["accuracy", "balanced_accuracy", "per_class_recall", "confusion_matrix", "six_crop_prediction_table"],
+  "selection_rule": "Because this is adaptive development, the best method may be selected for the next cycle, but no v4.6 result may be described as independent material holdout performance.",
+  "claim_boundary": "Source-assisted material labels; ceramic_family intentionally broader than porcelain; no condition/defect/corrosion/failure/safety claim."
+}

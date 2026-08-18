@@ -1,0 +1,19 @@
+{
+  "version": "v4.4-terminal-detection-holdout-freeze",
+  "frozen_before_model_inference": true,
+  "record_id": "POS_7630781",
+  "country": "England",
+  "source_sha256": "76d87f0f107086b36650328ee748bab337261085421c34bfa5de1366c04f0def",
+  "dimensions": [424, 640],
+  "morphology": "terminal tower with three clear vertical overhead-line insulator strings",
+  "selection_basis": "Direct pixel review committed in reports/v4_4_pixel_review.json before any model inference on this image.",
+  "assistant_provisional_boxes_xyxy": [
+    {"id": "7630781_i1", "class": "overhead_line_insulator_assembly", "xyxy": [285, 61, 294, 100]},
+    {"id": "7630781_i2", "class": "overhead_line_insulator_assembly", "xyxy": [265, 127, 276, 169]},
+    {"id": "7630781_i3", "class": "overhead_line_insulator_assembly", "xyxy": [244, 197, 257, 239]}
+  ],
+  "n_insulator_gt": 3,
+  "usage_rule": "Do not use this source for prompt selection, threshold selection, post-processing design, feature-prior fitting or detector training. Evaluate only after a v4 detection method and its operating point are frozen. If used for a headline evaluation, retire this image immediately afterward and never tune against it.",
+  "retired_v3_8_holdout_used": false,
+  "claim_boundary": "Single-source assistant-provisional portfolio holdout; not independently adjudicated engineering ground truth and not a production performance estimate."
+}
