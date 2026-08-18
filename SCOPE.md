@@ -1,0 +1,1 @@
+This branch exists solely to execute the frozen v2.3 SOTA bridge on GitHub Actions: canonical image hydration, YOLO26 checkpoint acquisition, YOLOE-26 zero-shot inference, and a short pretrained YOLO26 CPU fine-tune smoke.
