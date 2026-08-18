@@ -1,4 +1,4 @@
-name: v3.0 YOLOE-26 Visual-Prompt UK Components
+name: v3.1 Class-Isolated YOLOE Visual Prompts
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: v30-yoloe-visual-prompt-${{ github.ref }}
+  group: v31-class-isolated-vp-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -17,9 +17,9 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
 
 jobs:
-  yoloe-visual-prompt-components:
+  class-isolated-visual-prompts:
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 55
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -27,11 +27,11 @@ jobs:
           python-version: "3.11"
           cache: pip
           cache-dependency-path: requirements-yolo.txt
-      - name: Hydrate development train/val/showcase sources only
+      - name: Hydrate development sources only
         run: python scripts/v23_download_frozen_images.py
       - name: Validate current 5 train / 1 val / 1 development contract
         run: python scripts/v23_validate_pack.py
-      - name: Verify final holdout remains separate and untouched
+      - name: Verify frozen final holdout remains separate and untouched
         shell: bash
         run: |
           test -f data/final_holdout/final_holdout_freeze.json
@@ -55,16 +55,15 @@ jobs:
           shutil.copy2(src,Path('weights')/src.name)
           PY
           sha256sum weights/yoloe-26n-seg.pt
-      - name: Run UK component visual prompting from training reference POS_190181
-        run: python scripts/v30_yoloe_visual_prompt_components.py
+      - name: Run class-isolated UK component visual prompting
+        run: python scripts/v31_yoloe_class_isolated_vp.py
       - uses: actions/upload-artifact@v4
         with:
-          name: v30-yoloe-visual-prompt-components
+          name: v31-class-isolated-yoloe-visual-prompts
           path: |
-            reports/v3_0_visual_prompt_target_roi.jpg
-            reports/v3_0_yoloe_visual_prompt_POS_2326530.jpg
-            reports/v3_0_yoloe_visual_prompt_roi_native.jpg
-            reports/v3_0_yoloe_visual_prompt_metrics.json
+            reports/v3_1_target_tower_roi.jpg
+            reports/v3_1_class_isolated_vp_POS_2326530.jpg
+            reports/v3_1_class_isolated_vp_metrics.json
             weights/yoloe-26n-seg.pt
           if-no-files-found: error
           compression-level: 0
