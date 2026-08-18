@@ -51,6 +51,17 @@ jobs:
           echo '691c33cbd32767f0055219e2827fd5f6e788aef709d869eb325269e23af20f23  reports/v4_4_angle_material_candidates/POS_2952166.jpg' | sha256sum -c -
       - name: Run frozen SigLIP2 NaFlex text, image-prototype and hybrid crop methods
         run: python scripts/v46_siglip2_material_crops.py
+      - name: Build single-file evidence showcase
+        run: python scripts/v46_build_self_contained_showcase.py
+      - name: Verify self-contained showcase
+        shell: bash
+        run: |
+          test -s reports/GridSight_UK_v46_SELF_CONTAINED_SHOWCASE.html
+          grep -q 'data:image/jpeg;base64,' reports/GridSight_UK_v46_SELF_CONTAINED_SHOWCASE.html
+          if grep -Eq '<script[^>]+src=|<link[^>]+href=|src="https?://' reports/GridSight_UK_v46_SELF_CONTAINED_SHOWCASE.html; then
+            echo 'ERROR: external asset dependency found in showcase HTML.' >&2
+            exit 1
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: v46-siglip2-material-crops
@@ -59,6 +70,7 @@ jobs:
             reports/v4_6_siglip2_text_prompt_prototype_POS_2952166.jpg
             reports/v4_6_siglip2_image_reference_prototype_POS_2952166.jpg
             reports/v4_6_siglip2_equal_weight_text_image_hybrid_POS_2952166.jpg
+            reports/GridSight_UK_v46_SELF_CONTAINED_SHOWCASE.html
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
