@@ -1,4 +1,4 @@
-name: v3.6 Geometry-Aware YOLOE Insulator Postprocess
+name: v3.7 Symmetry-Pair YOLOE Insulator Completion
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: v36-geometry-prior-${{ github.ref }}
+  group: v37-symmetry-pair-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -17,7 +17,7 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
 
 jobs:
-  geometry-aware-yoloe:
+  symmetry-pair-completion:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -59,17 +59,17 @@ jobs:
           shutil.copy2(src,Path('weights')/name)
           PY
           sha256sum weights/yoloe-26n-seg.pt
-      - name: Fit training-only geometry prior and compare against raw text YOLOE
-        run: python scripts/v36_geometry_prior_yoloe.py
+      - name: Fit training-only symmetry prior and complete high-precision YOLOE pairs
+        run: python scripts/v37_symmetry_pair_completion.py
       - uses: actions/upload-artifact@v4
         with:
-          name: v36-geometry-aware-yoloe
+          name: v37-yoloe-symmetry-pair
           path: |
-            reports/v3_6_geometry_prior_metrics.json
-            reports/v3_5_v36_val_POS_5442616_tower_roi.jpg
-            reports/v3_5_v36_dev_POS_2326530_tower_roi.jpg
-            reports/v3_5_v36_raw_text_POS_2326530.jpg
-            reports/v3_5_v36_geometry_fused_POS_2326530.jpg
+            reports/v3_7_symmetry_pair_metrics.json
+            reports/v3_5_v37_val_POS_5442616_tower_roi.jpg
+            reports/v3_5_v37_dev_POS_2326530_tower_roi.jpg
+            reports/v3_5_v37_precision_seeds_POS_2326530.jpg
+            reports/v3_5_v37_symmetry_completed_POS_2326530.jpg
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
