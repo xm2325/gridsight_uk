@@ -1,0 +1,33 @@
+{
+  "version": "v4.3-controlled-morphology-diversity-summary",
+  "source_actions_run": 32112420042,
+  "source_artifact_id": 9315506930,
+  "source_artifact_sha256": "8c8327d25b4a9edd146011009fbb373becc29714c04a5e26728cf791f0ede4b2",
+  "experiment": "Identical pretrained YOLO26n/config, fixed POS_8091164 validation; baseline uses 5 original training towers/30 insulators, expanded arm adds POS_6610209/7 morphology-diverse insulators for 6 towers/37 insulators.",
+  "epochs_per_arm": 30,
+  "validation_source": "POS_8091164",
+  "n_validation_insulators": 3,
+  "baseline": {
+    "n_train_sources": 5,
+    "n_train_insulators": 30,
+    "precision": 0.0,
+    "recall": 0.0,
+    "map50": 0.0,
+    "map50_95": 0.0,
+    "n_predictions_at_conf_0_01": 100,
+    "checkpoint_sha256": "ea4b745af19ec7c4bdcfd194d09d8d627328a7a968264b8f86b846ce3d9dfdb8"
+  },
+  "expanded": {
+    "n_train_sources": 6,
+    "n_train_insulators": 37,
+    "precision": 0.0,
+    "recall": 0.0,
+    "map50": 0.0,
+    "map50_95": 0.0,
+    "n_predictions_at_conf_0_01": 100,
+    "checkpoint_sha256": "b1b9950fcaec48420beff7284be089ff8b28daacdb61b25429c9d529f4d691a3"
+  },
+  "decision": "Do not spend further CPU epochs on closed-set YOLO26 fine-tuning at 6-source/37-box scale. Keep YOLO26 as a future deployment candidate once labelled source diversity is materially larger; use YOLOE open-vocabulary proposals/foundation features for the current active-learning data-acquisition cycle.",
+  "old_v3_8_holdout_used": false,
+  "claim_boundary": "Very small development ablation; zero AP is evidence of current data insufficiency, not a general statement about YOLO26."
+}
