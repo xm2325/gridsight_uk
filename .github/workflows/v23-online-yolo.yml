@@ -1,4 +1,4 @@
-name: v3.5 YOLOE Multi-Source Visual Prompt Ablation
+name: v3.6 Geometry-Aware YOLOE Insulator Postprocess
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: v35-yoloe-vpe-${{ github.ref }}
+  group: v36-geometry-prior-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -17,9 +17,9 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
 
 jobs:
-  yoloe-multisource-vpe:
+  geometry-aware-yoloe:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -39,7 +39,7 @@ jobs:
           test ! -e data/images/test/POS_7561805.jpg
       - name: Install CPU PyTorch
         run: python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
-      - name: Install Ultralytics and visual-prompt dependencies
+      - name: Install Ultralytics and text-prompt dependencies
         shell: bash
         run: |
           python -m pip install -r requirements-yolo.txt
@@ -59,18 +59,17 @@ jobs:
           shutil.copy2(src,Path('weights')/name)
           PY
           sha256sum weights/yoloe-26n-seg.pt
-      - name: Compare text, single-reference VPE, and five-source aggregated VPE
-        run: python scripts/v35_yoloe_aggregated_vpe.py
+      - name: Fit training-only geometry prior and compare against raw text YOLOE
+        run: python scripts/v36_geometry_prior_yoloe.py
       - uses: actions/upload-artifact@v4
         with:
-          name: v35-yoloe-multisource-vpe
+          name: v36-geometry-aware-yoloe
           path: |
-            reports/v3_5_yoloe_aggregated_vpe_metrics.json
-            reports/v3_5_text_POS_2326530.jpg
-            reports/v3_5_single_vpe_POS_2326530.jpg
-            reports/v3_5_aggregate_vpe_POS_2326530.jpg
-            reports/v3_5_val_POS_5442616_tower_roi.jpg
-            reports/v3_5_dev_POS_2326530_tower_roi.jpg
+            reports/v3_6_geometry_prior_metrics.json
+            reports/v3_5_v36_val_POS_5442616_tower_roi.jpg
+            reports/v3_5_v36_dev_POS_2326530_tower_roi.jpg
+            reports/v3_5_v36_raw_text_POS_2326530.jpg
+            reports/v3_5_v36_geometry_fused_POS_2326530.jpg
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
