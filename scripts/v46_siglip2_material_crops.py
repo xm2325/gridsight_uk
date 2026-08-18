@@ -40,6 +40,11 @@ def crop_box(image, box, frac, min_pad):
 
 
 def pooled(output):
+    # Transformers 4.57.x SigLIP2 get_text_features()/get_image_features() return
+    # a pooled torch.Tensor directly. Older/other compatible APIs may expose
+    # BaseModelOutput-like or tuple outputs, so keep those fallbacks too.
+    if isinstance(output, torch.Tensor):
+        return output
     if hasattr(output,"pooler_output") and output.pooler_output is not None:
         return output.pooler_output
     if isinstance(output,(tuple,list)) and len(output)>1:
