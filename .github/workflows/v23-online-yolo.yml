@@ -47,6 +47,26 @@ jobs:
           compression-level: 0
           retention-days: 30
 
+  showcase-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Download held-out showcase from Geograph direct image host
+        run: python scripts/v23_download_showcase.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v23-showcase-image
+          path: |
+            data/images/test/POS_2326530.jpg
+            reports/v2_3_showcase_image_download.json
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+
   download-checkpoints:
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -74,14 +94,14 @@ jobs:
           retention-days: 14
 
   yoloe-zero-shot:
-    needs: [hydrate-and-validate-data, download-checkpoints]
+    needs: [showcase-image, download-checkpoints]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: v23-frozen-data
+          name: v23-showcase-image
           path: .
       - uses: actions/setup-python@v5
         with:
