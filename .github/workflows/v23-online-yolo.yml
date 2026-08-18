@@ -34,10 +34,12 @@ jobs:
       - name: Enforce no automatic final-holdout inference after v3.8
         shell: bash
         run: |
-          if grep -R "python scripts/v38_final_holdout_eval.py" .github/workflows; then
+          needle="v38_final_holdout_"'eval.py'
+          if grep -R "$needle" .github/workflows; then
             echo 'ERROR: post-final workflows must not automatically re-run the frozen holdout evaluator.' >&2
             exit 1
           fi
+          echo 'No final-holdout inference command is reachable from current workflows.'
       - name: Run label-only morphology-shift audit
         run: python scripts/v39_post_final_morphology_audit.py
       - uses: actions/upload-artifact@v4
