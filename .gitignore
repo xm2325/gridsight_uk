@@ -1,0 +1,5 @@
+weights/
+runs/
+data/images/
+*.pt
+__pycache__/
