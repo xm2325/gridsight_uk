@@ -111,6 +111,7 @@ jobs:
           thumbs=sorted(Path('_site/assets/dataset/thumbs').glob('POS_*.webp'))
           manifest=json.loads(Path('_site/assets/dataset/manifest.json').read_text())
           cases=json.loads(Path('_site/assets/dataset/cases.json').read_text())
+          material=json.loads(Path('reports/v4_6_siglip2_material_crop_results.json').read_text())
           if len(detail) != 12:
               raise SystemExit(f'Expected 12 detail crops, found {len(detail)}')
           if len(full) != 16 or len(thumbs) != 16:
@@ -125,13 +126,20 @@ jobs:
               raise SystemExit('Expected 16 gallery case-study buttons')
           if cases['cases']['POS_7630781']['metrics'][-1]['value'] != 'NOT RUN':
               raise SystemExit('POS_7630781 must remain an unspent holdout')
-          m=cases['cases']['POS_2952166']['metrics']
-          if [x['value'] for x in m[:3]] != ['6/6','2/6','3/6']:
-              raise SystemExit('Unexpected adaptive material summary')
+          order=[
+              'siglip2_text_prompt_prototype',
+              'siglip2_image_reference_prototype',
+              'siglip2_equal_weight_text_image_hybrid',
+          ]
+          expected=[f"{round(material['methods'][k]['accuracy']*6)}/6" for k in order]
+          shown=[x['value'] for x in cases['cases']['POS_2952166']['metrics'][:3]]
+          if shown != expected:
+              raise SystemExit(f'Material case-study metrics do not match this CI run: shown={shown}, expected={expected}')
           print(f'Online index: {p.stat().st_size:,} bytes')
           print('Primary gallery cards: 16/16')
           print(f'Legacy verified Commons originals: {manifest["legacy_verified_commons_originals"]}/7')
           print(f'Case studies: {cases["case_count"]}; featured: {len(cases["featured"])}')
+          print(f'Material case metrics from this run: {shown}')
           print(f'Dataset thumbs: {len(thumbs)} / {sum(x.stat().st_size for x in thumbs):,} bytes')
           print(f'Dataset full: {len(full)} / {sum(x.stat().st_size for x in full):,} bytes')
           PY
