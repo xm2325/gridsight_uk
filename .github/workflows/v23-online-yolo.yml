@@ -1,4 +1,4 @@
-name: v3.7 Symmetry-Pair YOLOE Insulator Completion
+name: v3.8 Frozen Final Holdout Evaluation
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: v37-symmetry-pair-${{ github.ref }}
+  group: v38-final-holdout-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -17,9 +17,9 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
 
 jobs:
-  symmetry-pair-completion:
+  frozen-final-holdout:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -27,16 +27,17 @@ jobs:
           python-version: "3.11"
           cache: pip
           cache-dependency-path: requirements-yolo.txt
-      - name: Hydrate development sources only
+      - name: Hydrate development/training sources used only to reconstruct frozen geometry prior
         run: python scripts/v23_download_frozen_images.py
-      - name: Validate current 5 train / 1 val / 1 development contract
+      - name: Validate development dataset contract
         run: python scripts/v23_validate_pack.py
-      - name: Verify frozen final holdout remains untouched
+      - name: Confirm final holdout is still untouched before frozen evaluation
         shell: bash
         run: |
           test -f data/final_holdout/final_holdout_freeze.json
-          test ! -e data/images/test/POS_3437435.jpg
-          test ! -e data/images/test/POS_7561805.jpg
+          test -f data/final_holdout/champion_freeze_v38.json
+          test ! -e data/final_holdout/images/POS_3437435.jpg
+          test ! -e data/final_holdout/images/POS_7561805.jpg
       - name: Install CPU PyTorch
         run: python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
       - name: Install Ultralytics and text-prompt dependencies
@@ -44,7 +45,7 @@ jobs:
         run: |
           python -m pip install -r requirements-yolo.txt
           python -m pip install 'git+https://github.com/ultralytics/CLIP.git'
-      - name: Download official YOLOE-26n-seg checkpoint
+      - name: Download and verify official frozen YOLOE-26n-seg checkpoint
         shell: bash
         run: |
           mkdir -p weights
@@ -58,18 +59,22 @@ jobs:
           if not src.exists(): raise SystemExit(f'missing {name}')
           shutil.copy2(src,Path('weights')/name)
           PY
+          echo 'Expected: 1741c1f8da3cea47e2c01829c334a50dc0b9bbd05e685b90a3ce84fae32c8c1b'
           sha256sum weights/yoloe-26n-seg.pt
-      - name: Fit training-only symmetry prior and complete high-precision YOLOE pairs
-        run: python scripts/v37_symmetry_pair_completion.py
+          test "$(sha256sum weights/yoloe-26n-seg.pt | awk '{print $1}')" = "1741c1f8da3cea47e2c01829c334a50dc0b9bbd05e685b90a3ce84fae32c8c1b"
+      - name: ONE-SHOT FINAL EVALUATION - do not tune from these results
+        run: python scripts/v38_final_holdout_eval.py
       - uses: actions/upload-artifact@v4
         with:
-          name: v37-yoloe-symmetry-pair
+          name: v38-frozen-final-holdout
           path: |
-            reports/v3_7_symmetry_pair_metrics.json
-            reports/v3_5_v37_val_POS_5442616_tower_roi.jpg
-            reports/v3_5_v37_dev_POS_2326530_tower_roi.jpg
-            reports/v3_5_v37_precision_seeds_POS_2326530.jpg
-            reports/v3_5_v37_symmetry_completed_POS_2326530.jpg
+            reports/v3_8_final_holdout_metrics.json
+            reports/v3_8_POS_3437435_tower_roi.jpg
+            reports/v3_8_POS_7561805_tower_roi.jpg
+            reports/v3_8_final_POS_3437435_champion.jpg
+            reports/v3_8_final_POS_3437435_prediction_vs_reference.jpg
+            reports/v3_8_final_POS_7561805_champion.jpg
+            reports/v3_8_final_POS_7561805_prediction_vs_reference.jpg
           if-no-files-found: error
           compression-level: 0
-          retention-days: 30
+          retention-days: 90
