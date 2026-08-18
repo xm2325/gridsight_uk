@@ -1,0 +1,48 @@
+{
+  "version": "v3.8-final-holdout-protocol",
+  "frozen_before_final_holdout_inference": true,
+  "champion_source": "v3.6 geometry-aware YOLOE selected on training + POS_5442616 validation; v3.7 symmetry completion rejected because validation selected n_added=0",
+  "model": {
+    "name": "yoloe-26n-seg.pt",
+    "sha256": "1741c1f8da3cea47e2c01829c334a50dc0b9bbd05e685b90a3ce84fae32c8c1b",
+    "prompt": "insulator string on an electricity transmission tower",
+    "tower_prompt_source": "scripts/v25_hybrid_component_detector.py:TOWER_PROMPT",
+    "inference_imgsz": 960,
+    "tower_imgsz": 768,
+    "raw_candidate_confidence_floor": 0.001
+  },
+  "geometry_prior": {
+    "training_sources": ["POS_1283842", "POS_190181", "POS_291727", "POS_3778704", "POS_7060068"],
+    "n_train_insulators": 30,
+    "features": [
+      "abs_x_offset_over_tower_width",
+      "y_from_tower_top_over_tower_height",
+      "log_width_over_tower_width",
+      "log_height_over_tower_height"
+    ],
+    "fit_rule": "empirical mean; covariance = 0.75*empirical_cov + 0.25*diag(empirical_cov) + 1e-5*I; geometry_weight=exp(-0.5*min(Mahalanobis_d2,50)); fused_score=model_score*geometry_weight"
+  },
+  "champion_operating_point": {
+    "fused_score_threshold": 0.0001,
+    "nms_iou": 0.2,
+    "selected_on": "POS_5442616 validation only",
+    "selection_metric": "max F1 at IoU>=0.30",
+    "validation_result_at_freeze": {"tp": 2, "fp": 1, "fn": 2, "precision": 0.6666666666666666, "recall": 0.5, "f1": 0.5714285714285715}
+  },
+  "secondary_frozen_baseline": {
+    "name": "raw text-prompt YOLOE",
+    "model_score_threshold": 0.001071144,
+    "nms_iou": 0.2,
+    "selected_on": "POS_5442616 validation only"
+  },
+  "final_holdout": {
+    "freeze_file": "data/final_holdout/final_holdout_freeze.json",
+    "holdout_release_sha256": "5b7fddb7200523b861e4e0970e9ff0b54b0cde2426d9f461b71ec50c417efa9f",
+    "record_ids": ["POS_3437435", "POS_7561805"],
+    "n_towers": 2,
+    "n_insulator_gt": 12,
+    "evaluation_iou_thresholds": [0.30, 0.50]
+  },
+  "locked_evaluation_rule": "Run champion and secondary frozen baseline exactly once on the pre-frozen final holdout. Do not change prompt, prior, threshold, NMS, image size, parent ROI rule, or post-processing in response to final-holdout outcomes if these outcomes are presented as headline evidence.",
+  "claim_boundary": "Final-holdout labels are assistant visual portfolio reference and not independently adjudicated material/condition/defect/safety ground truth. Scores are not calibrated probabilities."
+}
