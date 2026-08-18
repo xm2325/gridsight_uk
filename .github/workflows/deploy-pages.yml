@@ -63,6 +63,7 @@ jobs:
         run: |
           echo '630191b16e8709ad040e80304df072318e6863216cc3f6394a20d553949dd3c2  reports/v4_4_angle_material_candidates/POS_8090535.jpg' | sha256sum -c -
           echo '691c33cbd32767f0055219e2827fd5f6e788aef709d869eb325269e23af20f23  reports/v4_4_angle_material_candidates/POS_2952166.jpg' | sha256sum -c -
+          test -s reports/v4_4_angle_material_candidates/POS_7630781.jpg
 
       - name: Reproduce v4.6 material evidence
         run: python scripts/v46_siglip2_material_crops.py
@@ -70,7 +71,7 @@ jobs:
       - name: Build offline self-contained evidence page
         run: python scripts/v46_build_self_contained_showcase.py
 
-      - name: Build fast online Pages site
+      - name: Build sharp multi-image Pages site
         run: python scripts/v46_build_pages_site.py
 
       - name: Verify Pages payload
@@ -78,18 +79,29 @@ jobs:
         run: |
           test -s _site/index.html
           test -s _site/offline.html
-          test -s _site/assets/POS_2952166.webp
           test -s _site/assets/POS_2952166.jpg
+          test -s _site/assets/POS_8090535.jpg
+          test -s _site/assets/POS_7630781.jpg
           grep -q '<svg id="overlay"' _site/index.html
+          grep -q 'Tower gallery' _site/index.html
+          grep -q 'Magnified prediction crops' _site/index.html
           grep -q 'offline.html' _site/index.html
           python - <<'PY'
           from pathlib import Path
           p = Path('_site/index.html')
           size = p.stat().st_size
-          if size > 250_000:
+          if size > 220_000:
               raise SystemExit(f'index.html too large: {size} bytes')
+          crops = sorted(Path('_site/assets').glob('POS_*_detail_*.webp'))
+          if len(crops) != 12:
+              raise SystemExit(f'Expected 12 detail crops, found {len(crops)}')
           print(f'index.html: {size:,} bytes')
-          for q in sorted(Path('_site/assets').glob('*')):
+          print(f'detail crops: {len(crops)} / {sum(x.stat().st_size for x in crops):,} bytes')
+          for q in [
+              Path('_site/assets/POS_2952166.jpg'),
+              Path('_site/assets/POS_8090535.jpg'),
+              Path('_site/assets/POS_7630781.jpg'),
+          ]:
               print(f'{q}: {q.stat().st_size:,} bytes')
           PY
 
