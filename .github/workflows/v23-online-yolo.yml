@@ -1,30 +1,27 @@
-name: v2.5 YOLOE ROI + Pretrained YOLO26 Component Hybrid
+name: v2.6 Validation-Tuned YOLOE + YOLO26 Hybrid
 
 on:
   pull_request:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      epochs:
-        description: "Exploratory YOLO26n component-crop fine-tune epochs"
-        required: false
-        default: "80"
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
-  group: v25-yoloe-yolo26-hybrid-${{ github.ref }}
+  group: v26-val-tuned-hybrid-${{ github.ref }}
   cancel-in-progress: true
 
 env:
   PYTHONUNBUFFERED: "1"
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  V25_RUN_ID: "32087749320"
 
 jobs:
-  hybrid-component-pilot:
+  validation-tuned-operating-point:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -32,46 +29,32 @@ jobs:
           python-version: "3.11"
           cache: pip
           cache-dependency-path: requirements-yolo.txt
-      - name: Hydrate five UK tower images through Geograph direct derivatives
+      - name: Hydrate fixed validation and test imagery from Geograph
         run: python scripts/v23_download_frozen_images.py
-      - name: Validate fixed 3 train / 1 val / 1 test and 55 boxes
+      - name: Validate source-isolated split and 55-box contract
         run: python scripts/v23_validate_pack.py
       - name: Install CPU PyTorch
         run: python -m pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
       - name: Install Ultralytics stack
         run: python -m pip install -r requirements-yolo.txt
-      - name: Download official pretrained YOLO26n and YOLOE-26n-seg checkpoints
-        shell: bash
-        run: |
-          mkdir -p weights
-          python - <<'PY'
-          from pathlib import Path
-          from ultralytics import YOLO, YOLOE
-          import shutil
-          for name, cls in [('yolo26n.pt', YOLO), ('yoloe-26n-seg.pt', YOLOE)]:
-              m=cls(name); del m
-              src=Path(name)
-              if not src.exists(): raise SystemExit(f'Ultralytics did not materialize {name}')
-              shutil.copy2(src, Path('weights')/name)
-          PY
-          sha256sum weights/*.pt
-      - name: Train tower-crop component detector; held-out ROI is YOLOE-generated
-        env:
-          EPOCHS: ${{ github.event_name == 'workflow_dispatch' && inputs.epochs || '80' }}
-        run: python scripts/v25_hybrid_component_detector.py --epochs "$EPOCHS"
-      - uses: actions/upload-artifact@v4
+      - name: Download frozen v2.5 trained model artifact from prior successful run
+        uses: actions/download-artifact@v4
         with:
           name: v25-yoloe-yolo26-component-hybrid
+          path: prior-v25
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ env.V25_RUN_ID }}
+      - name: Select confidence/NMS only on validation tower, then evaluate fixed held-out test
+        run: python scripts/v26_val_tuned_postprocess.py --artifact-root prior-v25
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v26-validation-tuned-hybrid
           path: |
             reports/v2_3_frozen_image_download.json
             reports/v2_3_pack_validation.json
-            reports/v2_5_yoloe_yolo26_hybrid_POS_2326530.jpg
-            reports/v2_5_yoloe_yolo26_hybrid_metrics.json
-            data/v25_component_crop/data.yaml
-            runs/v2_5_yolo26n_component_crop/results.csv
-            runs/v2_5_yolo26n_component_crop/weights/*.pt
-            weights/yolo26n.pt
-            weights/yoloe-26n-seg.pt
+            reports/v2_6_val_crop_POS_5442616.jpg
+            reports/v2_6_test_yoloe_crop_POS_2326530.jpg
+            reports/v2_6_val_tuned_hybrid_POS_2326530.jpg
+            reports/v2_6_val_tuned_hybrid_metrics.json
           if-no-files-found: error
-          compression-level: 0
           retention-days: 30
