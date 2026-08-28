@@ -1,0 +1,35 @@
+{
+  "run": "runs/component_masks/v1_20260828",
+  "dataset": "data/external/epri_component_masks_v1",
+  "source_dataset": "data/external/epri_components_v1",
+  "source_manifest_sha256": "56e0517fcbf864f6c60aa1e2b0869cf9061138a32eb2b2acd40ad37efcb8cffa",
+  "source_plan_sha256": "8da5d73f953e40f9eaea40d0ac864352b2a2cd1470f46391e181a1d998fc0262",
+  "uk_dataset": "data/external/uk_distribution_pilot_v1",
+  "uk_manifest_sha256": "fcb4c41d8379bc3c4eab0e7e6c7a099af1d2ec6b533bcc5953d15816ed59d171",
+  "classes": ["pole", "crossarm", "insulator"],
+  "checkpoint": "weights/yoloe-26m-seg.pt",
+  "checkpoint_sha256": "585f5ec9028fd358035da8d860c27c56be285a795cba2076fba536a4391c2c83",
+  "training": {
+    "epochs": 20, "imgsz": 1280, "batch": 8, "nbs": 8,
+    "optimizer": "AdamW", "lr0": 0.0005, "lrf": 0.1,
+    "weight_decay": 0.0005, "warmup_epochs": 1.0, "seed": 17,
+    "workers": 12, "amp": false, "freeze": 0, "cache": false,
+    "mosaic": 0.0, "mixup": 0.0, "copy_paste": 0.0,
+    "translate": 0.05, "scale": 0.2, "fliplr": 0.5,
+    "hsv_h": 0.015, "hsv_s": 0.3, "hsv_v": 0.2,
+    "overlap_mask": false, "mask_ratio": 4
+  },
+  "checkpoint_selection": "Fixed final epoch 20, not chosen on development or UK outputs",
+  "inference": {
+    "long_side": 1280, "confidence_floor": 0.05,
+    "max_det": 100, "nms_iou": 0.5, "retina_masks": true,
+    "resize": "PIL RGB LANCZOS, raw orientation, exact saved working raster; no synthetic enhancement",
+    "tiled": false, "manual_roi": false
+  },
+  "scope": "320 existing EPRI training images, 80 development images, all 27 existing UK qualitative images. No evaluation-split images, no old experiment rerun, no source-label corrections, no pseudo labels.",
+  "polygon_policy": "Retain original source vertices and overlapping instances. Require all coordinates inside the source canvas and absent/1 EXIF; fail on incompatible source geometry rather than guessing.",
+  "metrics": "Class-aware box and raster-mask source agreement at score .25 and IoU .5 on all 80 development inputs; known source-class review flag retained. Existing 40-epoch box detector is a practical saved baseline, not a controlled architecture ablation.",
+  "pole_top": "Unscored geometry candidate only: a pole mask axis endpoint near predicted attached components, with ambiguity/truncation rejection. No supervised pole-top or physical tip accuracy claim.",
+  "steelwork": "Crossarm masks are structural-role masks, not a steel material classifier. Existing UK DINO steelwork proposals may be shown separately as unreviewed hypotheses.",
+  "budget": "One gputest job, 15-minute limit, one 20-epoch training run. Do not automatically resubmit or extend."
+}

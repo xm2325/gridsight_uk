@@ -13,6 +13,7 @@ Source release: 28 August 2026. This branch adds the experiment runners, English
 | UVInsDet supervised pilot | Fixed 10 epochs; 19 saved glass predictions and zero porcelain predictions above 0.05 | Failed pilot retained. Only ONE distinct porcelain training photo, even after weighting |
 | Substation material v1 | Fixed 20 epochs, 600 train / 25 dev; glass precision/recall 78.1%/43.1%, porcelain 64.3%/32.7% at 0.25 | Cross-source UVInsDet transfer fails; orientation gate excluded usable undefined-EXIF files. [Full result](SUBSTATION_MATERIAL_V1.md) |
 | Frozen SigLIP2 + supervised head | 292 source crops: 91.1% argmax agreement; oracle transfer crops: 19/20; automatic material detection does not improve | Existing proposals cover 0/12 porcelain source sheds. Conditional classification is not detection. [Full result](MATERIAL_HEAD_V1.md) |
+| Component instance masks | On matched development objects, mask/rectangle IoU: pole .900/.699, crossarm .698/.568, insulator .785/.656 | Crossarm misses and weak UK transfer remain. Geometry pole ends are unscored; steel hypotheses unreviewed. [Full result](COMPONENT_MASKS_V1.md) |
 
 Roihu jobs 916391 (38 seconds) and 916435 (90 seconds, including training) completed successfully. Successful execution is not successful recognition. The two legacy adapted-detector outputs in the public demo predate the Roihu-only requirement; all subsequent model work was on Roihu. New material inference requires a CUDA allocation on `gputest` and rejects local CPU/MPS execution before importing torch.
 
@@ -30,6 +31,7 @@ Roihu jobs 916391 (38 seconds) and 916435 (90 seconds, including training) compl
 | New public material source audit | `audit_substation15.py`, `verify_substation15_samples.py`; see [audit](SUBSTATION15_AUDIT.md) |
 | Supervised material follow-up | `prepare_substation_material.py`, `roihu_substation_material.py`, `build_substation_material_report.py` |
 | Frozen-feature material diagnosis | `audit_substation_orientation.py`, `prepare_material_head.py`, `roihu_material_head.py`, `build_material_head_report.py` |
+| Component masks and pole-end geometry | `prepare_component_masks.py`, `roihu_component_masks.py`, `resume_component_masks.py`, `build_component_masks_report.py`, `component_mask_metrics.py` |
 
 Python entry points live under `scripts/`; protocols under `configs/`. Model/data acquisition scripts pin releases and verify hashes. Do not substitute similarly named weights. Each run retains its own source snapshot: the latest branch code is not claimed to be byte-identical to every historical runner.
 
@@ -56,6 +58,7 @@ The browser URLs are local services, not public GitHub links. A clean clone does
 | 8773 | `runs/paper_material_demo/v2_roihu_20260828` | English four-arm material demo, source polygons and failures |
 | 8774 | `runs/substation_material/v1_20260828` | English supervised material development/transfer report; all 33 images |
 | 8775 | `runs/material_head/v1_20260828` | English automatic comparison, source-crop and oracle diagnostics; fixed head |
+| 8776 | `runs/component_masks/v1_20260828/inference` | English instance masks, fixed NMS, saved box baseline and unscored pole-end geometry |
 
 If the corresponding service is not already running:
 

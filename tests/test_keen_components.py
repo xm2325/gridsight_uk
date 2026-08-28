@@ -21,6 +21,7 @@ from prepare_substation_material import capture_group, polygon_references, label
 from audit_substation_orientation import eligible_geometry
 from material_head_common import decide as head_decide
 from build_material_head_report import classification_stats
+from prepare_component_masks import segmentation_line
 
 
 def prediction(c=0, score=.9, box=None):
@@ -28,6 +29,15 @@ def prediction(c=0, score=.9, box=None):
 
 
 class ComponentMetricTests(unittest.TestCase):
+    def test_segmentation_labels_keep_original_vertices_and_reject_geometry_guessing(self):
+        ref={'class_id':1,'polygon':[{'x':0,'y':0},{'x':100,'y':0},{'x':100,'y':50}]}
+        before=deepcopy(ref)
+        values=segmentation_line(ref,100,50).split()
+        self.assertEqual(values[0],'1');self.assertEqual(list(map(float,values[1:])),[0,0,1,0,1,1])
+        self.assertEqual(ref,before)
+        ref['polygon'][0]['x']=-1
+        with self.assertRaises(ValueError):segmentation_line(ref,100,50)
+
     def test_crop_statistics_keep_abstentions_in_coverage_denominator(self):
         rows=[{'class_id':0,'tight_argmax':'glass','material':'glass'},
               {'class_id':1,'tight_argmax':'porcelain','material':'unknown'},
