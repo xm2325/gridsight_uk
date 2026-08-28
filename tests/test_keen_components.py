@@ -18,6 +18,9 @@ from audit_keen_development import miss_reason, review_needs, trace_publisher_la
 from paper_material_demo import material_decision, extent, suppress, runtime as model_runtime
 from prepare_paper_selection import selection_rows
 from prepare_substation_material import capture_group, polygon_references, label_text, duplicate_components
+from audit_substation_orientation import eligible_geometry
+from material_head_common import decide as head_decide
+from build_material_head_report import classification_stats
 
 
 def prediction(c=0, score=.9, box=None):
@@ -25,6 +28,36 @@ def prediction(c=0, score=.9, box=None):
 
 
 class ComponentMetricTests(unittest.TestCase):
+    def test_crop_statistics_keep_abstentions_in_coverage_denominator(self):
+        rows=[{'class_id':0,'tight_argmax':'glass','material':'glass'},
+              {'class_id':1,'tight_argmax':'porcelain','material':'unknown'},
+              {'class_id':2,'tight_argmax':'glass','material':'glass'}]
+        stats=classification_stats(rows)
+        self.assertEqual(stats['accepted'],2)
+        self.assertEqual(stats['accepted_coverage'],2/3)
+        self.assertEqual(stats['accepted_accuracy'],.5)
+        self.assertEqual(stats['decision_confusion'],[[1,0,0],[0,0,1],[1,0,0]])
+        self.assertIsNone(classification_stats([])['accepted_accuracy'])
+
+    def test_material_head_abstains_without_using_probabilities(self):
+        cfg={'classes':['glass','porcelain','other'],'minimum_native_side':16,'minimum_native_area':512,
+             'rejection':{'minimum_logit_margin':.5}}
+        b=[0,0,100,100]
+        self.assertEqual(head_decide([3,1,0],[2,0,0],b,cfg)['material'],'glass')
+        with self.assertRaises(ValueError):
+            head_decide([float('nan'),1,0],[2,0,0],b,cfg)
+        for tight,context,box in [([1,1.1,0],[1,1.1,0],b),([3,0,0],[0,3,0],b),
+                                  ([0,0,3],[0,0,3],b),([3,0,0],[3,0,0],[0,0,10,100])]:
+            d=head_decide(tight,context,box,cfg)
+            self.assertEqual(d['material'],'unknown');self.assertFalse(d['material_verified']);self.assertFalse(d['scores_are_probabilities'])
+
+    def test_orientation_zero_is_not_treated_as_an_actual_rotation(self):
+        for orientation in [None,0,1]:
+            self.assertTrue(eligible_geometry((1280,960),(1280,960),orientation))
+        for orientation in [2,3,4,5,6,7,8,9]:
+            self.assertFalse(eligible_geometry((1280,960),(1280,960),orientation))
+        self.assertFalse(eligible_geometry((1280,960),(960,1280),0))
+
     def test_substation_groups_keep_dates_and_undated_cameras_together(self):
         self.assertEqual(capture_group('2022-07-20_p4_P4_C019.jpg'), 'date_20220720')
         self.assertEqual(capture_group('img_20220720_200840.jpg'), 'date_20220720')

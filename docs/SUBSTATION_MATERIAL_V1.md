@@ -2,6 +2,8 @@
 
 28 August 2026. This is a completed, bounded development experiment, not UK or independent-asset validation.
 
+Subsequent audit and one frozen-feature classifier are now complete: see [material head v1](MATERIAL_HEAD_V1.md). The orientation exclusion breakdown is resolved there; this original run and the historical observations below remain unchanged.
+
 ## Execution and verification
 
 - Roihu gputest job **919934**, NVIDIA GH200 120GB, **COMPLETED / 0:0 / 3m38s**.

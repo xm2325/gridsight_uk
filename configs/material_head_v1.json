@@ -1,0 +1,72 @@
+{
+  "run": "runs/material_head/v1_20260828",
+  "dataset": "data/external/material_head_v1",
+  "archive_sha256": "7b4bbf72b48e437b8571584c0b8bee394fa6e156a622c6bf8276c4a61c8eb424",
+  "orientation_audit": "runtime/substation_orientation_v1.json",
+  "development_groups": [
+    "undated_FLIR",
+    "date_20210721"
+  ],
+  "classes": [
+    "glass",
+    "porcelain",
+    "other"
+  ],
+  "publisher_classes": [
+    "Glass disc insulator",
+    "Porcelain pin insulator"
+  ],
+  "source_images_max": {
+    "train": 600,
+    "development": 96
+  },
+  "crop_limits": {
+    "train": [
+      500,
+      500,
+      300
+    ],
+    "development": [
+      150,
+      150,
+      100
+    ]
+  },
+  "max_material_crops_per_image_class": 4,
+  "max_negative_crops_per_image": 2,
+  "seed": "material-head-v1-20260828",
+  "coordinate_policy": "Raw native pixels, matching annotation/mask dimensions; absent/0/1 EXIF accepted. PNG crops contain no orientation metadata. No transposition or rescaling of annotation coordinates.",
+  "negative_policy": "64-pixel square fully inside an original Background, Power transformer, Muffle or Breaker polygon, disjoint from every material bounding box. Source-derived non-target crops, not expert-verified material negatives or polymer evidence.",
+  "minimum_native_side": 16,
+  "minimum_native_area": 512,
+  "context_padding": 0.12,
+  "encoder": "weights/siglip2-base-naflex-b53b807",
+  "encoder_sha256": "ac5f28bbdf92c0c1696ccbd3ce716426049cd67ad8045b66d0d938b0f9c8bbec",
+  "batch_size": 16,
+  "classifier": {
+    "type": "linear_3_class",
+    "steps": 400,
+    "learning_rate": 0.01,
+    "weight_decay": 0.001,
+    "seed": 17,
+    "inverse_class_frequency_weighting": true
+  },
+  "rejection": {
+    "minimum_logit_margin": 0.5,
+    "require_tight_context_agreement": true,
+    "other_is_abstention": true,
+    "calibrated_probability": false
+  },
+  "external_demo": "runs/paper_material_demo/v2_roihu_20260828",
+  "external_manifest_sha256": "5cca5321c11f6346a15ccf0d6ad705e036f3819ccf75ebc867a8e9e8bf620731",
+  "automatic_localisation": "Reuse all existing Grounding DINO proposals and their verified SigLIP2 embeddings; no detector rerun, no target source boxes used for automatic inference.",
+  "oracle_diagnostic": "Separately classify original UVInsDet target polygon crops; these source boxes are an oracle diagnostic and must never be presented as automatic localisation.",
+  "evaluation_scope": "Same-substation development and eight already inspected external demo images; NOT independent UK accuracy. No model or threshold search, no encoder fine-tuning, no polymer claim.",
+  "budget": "One gputest job, 15 minutes. One fixed head, 400 full-batch steps. Do not automatically resubmit or extend.",
+  "negative_source_classes": [
+    "Background",
+    "Power transformer",
+    "Muffle",
+    "Breaker"
+  ]
+}

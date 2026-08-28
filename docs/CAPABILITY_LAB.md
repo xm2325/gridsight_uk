@@ -12,6 +12,7 @@ Source release: 28 August 2026. This branch adds the experiment runners, English
 | UVInsDet public demo | Grounding DINO localises six selected main glass strings with IoU 0.942–0.986; frozen SigLIP2 references/text often disagree | Eight previously inspected demonstration inputs, not independent accuracy |
 | UVInsDet supervised pilot | Fixed 10 epochs; 19 saved glass predictions and zero porcelain predictions above 0.05 | Failed pilot retained. Only ONE distinct porcelain training photo, even after weighting |
 | Substation material v1 | Fixed 20 epochs, 600 train / 25 dev; glass precision/recall 78.1%/43.1%, porcelain 64.3%/32.7% at 0.25 | Cross-source UVInsDet transfer fails; orientation gate excluded usable undefined-EXIF files. [Full result](SUBSTATION_MATERIAL_V1.md) |
+| Frozen SigLIP2 + supervised head | 292 source crops: 91.1% argmax agreement; oracle transfer crops: 19/20; automatic material detection does not improve | Existing proposals cover 0/12 porcelain source sheds. Conditional classification is not detection. [Full result](MATERIAL_HEAD_V1.md) |
 
 Roihu jobs 916391 (38 seconds) and 916435 (90 seconds, including training) completed successfully. Successful execution is not successful recognition. The two legacy adapted-detector outputs in the public demo predate the Roihu-only requirement; all subsequent model work was on Roihu. New material inference requires a CUDA allocation on `gputest` and rejects local CPU/MPS execution before importing torch.
 
@@ -28,6 +29,7 @@ Roihu jobs 916391 (38 seconds) and 916435 (90 seconds, including training) compl
 | Reconstruct historical sample selection | `prepare_paper_selection.py` |
 | New public material source audit | `audit_substation15.py`, `verify_substation15_samples.py`; see [audit](SUBSTATION15_AUDIT.md) |
 | Supervised material follow-up | `prepare_substation_material.py`, `roihu_substation_material.py`, `build_substation_material_report.py` |
+| Frozen-feature material diagnosis | `audit_substation_orientation.py`, `prepare_material_head.py`, `roihu_material_head.py`, `build_material_head_report.py` |
 
 Python entry points live under `scripts/`; protocols under `configs/`. Model/data acquisition scripts pin releases and verify hashes. Do not substitute similarly named weights. Each run retains its own source snapshot: the latest branch code is not claimed to be byte-identical to every historical runner.
 
@@ -53,6 +55,7 @@ The browser URLs are local services, not public GitHub links. A clean clone does
 | 8772 | `runs/uk_capabilities/v3_20260827` | English structural/material review, with local draft API |
 | 8773 | `runs/paper_material_demo/v2_roihu_20260828` | English four-arm material demo, source polygons and failures |
 | 8774 | `runs/substation_material/v1_20260828` | English supervised material development/transfer report; all 33 images |
+| 8775 | `runs/material_head/v1_20260828` | English automatic comparison, source-crop and oracle diagnostics; fixed head |
 
 If the corresponding service is not already running:
 
@@ -74,7 +77,7 @@ The Roihu jobs used CSC `python-pytorch/2.10`, project-local dependencies, offli
 
 ## How the demo should improve next
 
-1. **Material:** use the newly audited public source to obtain more distinct porcelain views. Preserve its polygon units and overlapping equipment/material labels. First compare a supervised crop classifier with the direct material detector under a fixed development protocol; include automatic-crop misses and abstentions. Neither raw cosine nor detector score is a calibrated material probability.
+1. **Material:** the fixed crop-classifier comparison is now complete. It improves source-crop evidence but does not improve the automatic pipeline. Resolve component-versus-shed units and missing localisations before fitting more classifier steps; retain misses, rejected candidates and all saved baselines. Neither raw cosine nor detector score is a calibrated material probability.
 2. **Steelwork:** a crossarm is a role, while steel is a material. Keep wood crossarms, metal support members and enclosures distinct. Use member/assembly annotations for detection; use segmentation only if downstream metal area or corrosion is needed. The new dataset does not supply a steelwork class.
 3. **Pole-top:** decide between shaft-tip keypoint and upper-assembly extent. The current geometry-derived region is useful navigation, not a verified detector. The new source does not supply pole-top labels.
 4. **Presentation:** show original image, automatic component boxes, native crops, source evidence and failure examples separately. Preserve class toggles. Do not copy the screenshot's percentages or draw publisher polygons as model predictions.
