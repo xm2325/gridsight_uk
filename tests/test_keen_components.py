@@ -17,6 +17,7 @@ from build_keen_components_english import build as build_english, link_existing,
 from audit_keen_development import miss_reason, review_needs, trace_publisher_labels
 from paper_material_demo import material_decision, extent, suppress, runtime as model_runtime
 from prepare_paper_selection import selection_rows
+from prepare_substation_material import capture_group, polygon_references, label_text, duplicate_components
 
 
 def prediction(c=0, score=.9, box=None):
@@ -24,6 +25,27 @@ def prediction(c=0, score=.9, box=None):
 
 
 class ComponentMetricTests(unittest.TestCase):
+    def test_substation_groups_keep_dates_and_undated_cameras_together(self):
+        self.assertEqual(capture_group('2022-07-20_p4_P4_C019.jpg'), 'date_20220720')
+        self.assertEqual(capture_group('img_20220720_200840.jpg'), 'date_20220720')
+        self.assertEqual(capture_group('FLIR0335_rgb.jpg'), 'undated_FLIR')
+
+    def test_substation_labels_preserve_overlapping_polygons_and_original_units(self):
+        a = {'imageWidth': 100, 'imageHeight': 100, 'shapes': [
+            {'label': name, 'shape_type': 'polygon', 'points': [[-1,0],[50,0],[50,50],[0,50]], 'group_id': None}
+            for name in ['glass','porcelain','equipment']]}
+        before=deepcopy(a); refs=polygon_references(a,['glass','porcelain'])
+        self.assertEqual(len(refs),2); self.assertEqual([r['class_id'] for r in refs],[0,1])
+        self.assertTrue(all(r['clipped'] for r in refs)); self.assertEqual(a,before)
+        self.assertEqual(len(label_text(refs,100,100).splitlines()),2)
+
+    def test_substation_duplicate_components_are_transitive_but_aspect_aware(self):
+        rows=[dict(id=str(i),pixel_sha256=str(i),dhash=h,width=w,height=100)
+              for i,(h,w) in enumerate([('0',100),('1',100),('3',100),('0',200)])]
+        clusters,edges=duplicate_components(rows,1,.1)
+        self.assertEqual(sorted(len(c) for c in clusters),[1,3])
+        self.assertEqual(len(edges),2)
+
     def test_material_inference_rejects_local_devices_before_loading_torch(self):
         with patch.dict('os.environ', {}, clear=True):
             for device in ['cpu', 'mps', 'cuda']:

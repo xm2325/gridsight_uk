@@ -2,6 +2,8 @@
 
 28 August 2026. **Data audit only; no model was trained or evaluated on this source.**
 
+This statement describes the audit stage. A subsequent bounded material experiment has since completed; see [v1 results and its orientation-handling limitation](SUBSTATION_MATERIAL_V1.md). The source audit and its original mask checks remain unchanged.
+
 Source: Gomes and colleagues, *A Semantically Annotated 15-Class Ground Truth Dataset for Substation Equipment*, Data 8(7), 118 (2023). [Paper](https://www.mdpi.com/2306-5729/8/7/118) · [Publisher dataset, CC BY 4.0](https://zenodo.org/records/7884270).
 
 The archive contains 1,660 image annotation files from one Brazilian substation with multiple camera types and acquisition dates. These are not 1,660 independent assets or UK distribution poles. Object labels can overlap: porcelain components may also lie inside an equipment polygon. The separate porcelain masks retain this information.
