@@ -1,5 +1,19 @@
 weights/
 runs/
 data/images/
+data/external/
+runtime/
+*.ts
 *.pt
 __pycache__/
+.venv-paperdemo/
+.venv*/
+.DS_Store
+.env
+.env.*
+*.log
+# Operational task notes and human review drafts are not source releases.
+*_STATUS.md
+ROIHU_DEMO.md
+INSPLAD100_EXPERIMENT.md
+data/annotations/uk_component_review*/

@@ -1,0 +1,3 @@
+# Additive project-local packages only; preserve CSC's torch/CUDA installation.
+clip @ git+https://github.com/ultralytics/CLIP.git@68dce32140994dfcb645a1320c4ebdc034fc19fd
+ftfy==6.3.1

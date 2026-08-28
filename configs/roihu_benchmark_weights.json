@@ -1,0 +1,23 @@
+{
+  "source": "https://api.github.com/repos/ultralytics/assets/releases/tags/v8.4.0",
+  "assets": [
+    {
+      "name": "mobileclip2_b.ts",
+      "size": 253794476,
+      "digest": "sha256:35d7f213e4d75f38514e4656ad3cb91158bd33e3805d8ac349f23b186f66982f",
+      "url": "https://github.com/ultralytics/assets/releases/download/v8.4.0/mobileclip2_b.ts"
+    },
+    {
+      "name": "yoloe-26m-seg.pt",
+      "size": 70443185,
+      "digest": "sha256:585f5ec9028fd358035da8d860c27c56be285a795cba2076fba536a4391c2c83",
+      "url": "https://github.com/ultralytics/assets/releases/download/v8.4.0/yoloe-26m-seg.pt"
+    },
+    {
+      "name": "yoloe-26n-seg.pt",
+      "size": 11710443,
+      "digest": "sha256:1741c1f8da3cea47e2c01829c334a50dc0b9bbd05e685b90a3ce84fae32c8c1b",
+      "url": "https://github.com/ultralytics/assets/releases/download/v8.4.0/yoloe-26n-seg.pt"
+    }
+  ]
+}

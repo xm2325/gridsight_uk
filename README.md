@@ -2,7 +2,11 @@
 
 A reproducible computer-vision portfolio project for electricity-transmission inspection. The repository intentionally separates **model capability**, **data/provenance quality**, and **claim readiness** rather than presenting a polished demo as production evidence.
 
-## Current evidence status — v3.9
+## Capability lab — 28 August 2026
+
+The separate research branch adds English component review, Roihu experiment runners, material-source audits and tests. See the [capability lab](docs/CAPABILITY_LAB.md) for verified outcomes, saved-run prerequisites and limitations, and the [new public material-source audit](docs/SUBSTATION15_AUDIT.md). These additions do not reopen the frozen UK holdout or claim production material recognition. Model weights, source datasets and human review drafts are not included in the source release.
+
+## Closed-cycle evidence status — v3.9
 
 The first development cycle is now **closed**. Model selection stopped before a two-image final holdout was unlocked; the final evaluation ran once in GitHub Actions and is now programmatically locked against automatic re-execution/tuning.
 

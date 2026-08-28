@@ -1,0 +1,27 @@
+{
+  "protocol_id": "insplad100-resolution-capacity-tiling-v1",
+  "dataset": "InsPLAD-det official validation subset",
+  "selection_seed": "gridsight-insplad100-20260827-v1",
+  "expected_images": 100,
+  "scope": "Non-commercial Brazilian UAV component-detection diagnostic; not a UK holdout, not material or defect classification",
+  "inference_confidence": 0.05,
+  "operating_confidences": [0.05, 0.25],
+  "iou_thresholds": [0.3, 0.5],
+  "nms_iou": 0.5,
+  "scored_model_class_id": 2,
+  "source_categories": {"7": "polymer insulator", "8": "glass insulator"},
+  "prompts": [
+    "steel lattice transmission tower structure",
+    "crossarm of an electricity transmission tower",
+    "insulator string on an electricity transmission tower",
+    "earth wire peak at the top of an electricity transmission tower"
+  ],
+  "arms": ["n640", "n1280", "m1280", "m1280_tiles"],
+  "half": false,
+  "tile_size": 1280,
+  "tile_overlap": 0.25,
+  "manual_rois_for_inference": false,
+  "thresholds_chosen_before_inference": true,
+  "pretraining_overlap_with_public_dataset": "unknown",
+  "metrics": "Greedy one-to-one TP/FP/FN, precision, recall, F1 at fixed thresholds; NOT COCO mAP"
+}

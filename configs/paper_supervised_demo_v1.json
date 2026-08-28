@@ -1,0 +1,30 @@
+{
+  "created_at": "2026-08-27T23:19:43.645383+00:00",
+  "run": "runs/paper_material_supervised/v1_20260828",
+  "dataset": "data/external/uvinsdet_supervised_demo_v1",
+  "manifest_sha256": "1b351ce047452fb3aa5f81c48f8219e2ba63f4177af7b65e1aed939a3dabf780",
+  "source_demo": "runs/paper_material_demo/v2_roihu_20260828",
+  "source_demo_manifest_sha256": "5cca5321c11f6346a15ccf0d6ad705e036f3819ccf75ebc867a8e9e8bf620731",
+  "classes": [
+    "glass",
+    "porcelain"
+  ],
+  "pretrained": "weights/yoloe-26m-seg.pt",
+  "pretrained_sha256": "585f5ec9028fd358035da8d860c27c56be285a795cba2076fba536a4391c2c83",
+  "yaml": "yoloe-26m.yaml",
+  "epochs": 10,
+  "imgsz": 960,
+  "batch": 16,
+  "seed": 17,
+  "porcelain_weighting": "20 appearances of one original image, not 20 independent images.",
+  "checkpoint_selection": "Fixed final epoch, not selected against target images or material accuracy.",
+  "authorization": "User permits small academic/public labelled-data demo and requests Roihu gputest. One 10-epoch supervised pilot following recorded transfer failures; no automatic repeat.",
+  "assessment": "All eight previously inspected demo inputs are development/demo images. This is not a fresh holdout or UK validation.",
+  "inference": {
+    "imgsz": 1280,
+    "conf": 0.05,
+    "iou": 0.5,
+    "max_det": 100,
+    "augment": false
+  }
+}

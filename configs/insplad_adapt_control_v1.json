@@ -1,0 +1,10 @@
+{
+  "addendum_id": "untrained-fused-detector-control-v1",
+  "base_protocol_sha256": "d55d28cd5165a075571a393ca530fc6fd1699bba08cf5150dc45c98d36c3d99b",
+  "timing": "Specified after prompt diagnostics, before adaptation and before any new heldout inference",
+  "reason": "Conversion from the released segmentation model to a fused one-class detector is another change; isolate its effect from optimizer updates",
+  "control": "Save the exact initialized training model in on_train_start before the first optimizer step; evaluate this zero-step checkpoint alongside the final checkpoint",
+  "datasets": ["original_100_diagnostic", "new_100_heldout"],
+  "changes_to_training_or_selection": "none",
+  "heldout_used_for_model_or_threshold_selection": false
+}
