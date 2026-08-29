@@ -1,0 +1,208 @@
+{
+  "version": "uk-material-head-v2-targets-v1",
+  "created_at": "2026-08-29T15:35:00+01:00",
+  "model_v2_inference_performed_before_freeze": false,
+  "earlier_model_outputs_exist": true,
+  "training_use": false,
+  "images": [
+    {
+      "record_id": "uk_material_8090535",
+      "image_file": "data/external/uk_material_sources_v1/images/uk_material_8090535.jpg",
+      "image_sha256": "630191b16e8709ad040e80304df072318e6863216cc3f6394a20d553949dd3c2",
+      "width": 640,
+      "height": 480,
+      "asset_group": "hitchin_l6_d30_20250510",
+      "source_page_url": "https://www.geograph.org.uk/photo/8090535",
+      "material_evidence": "blue-tinted glass insulators rather than the brown-glazed porcelain insulators used originally",
+      "boxes": [
+        {
+          "id": "8090535_g1",
+          "material": "glass",
+          "source_specific_material": "glass",
+          "xyxy": [
+            238,
+            107,
+            326,
+            124
+          ],
+          "reference_status": "legacy source-assisted manual box; already observed by earlier models"
+        },
+        {
+          "id": "8090535_g2",
+          "material": "glass",
+          "source_specific_material": "glass",
+          "xyxy": [
+            234,
+            210,
+            337,
+            227
+          ],
+          "reference_status": "legacy source-assisted manual box; already observed by earlier models"
+        },
+        {
+          "id": "8090535_g3",
+          "material": "glass",
+          "source_specific_material": "glass",
+          "xyxy": [
+            239,
+            296,
+            333,
+            314
+          ],
+          "reference_status": "legacy source-assisted manual box; already observed by earlier models"
+        },
+        {
+          "id": "8090535_c1",
+          "material": "porcelain_ceramic",
+          "source_specific_material": "porcelain",
+          "xyxy": [
+            365,
+            103,
+            411,
+            131
+          ],
+          "reference_status": "legacy source-assisted manual box; already observed by earlier models"
+        },
+        {
+          "id": "8090535_c2",
+          "material": "porcelain_ceramic",
+          "source_specific_material": "porcelain",
+          "xyxy": [
+            384,
+            208,
+            431,
+            236
+          ],
+          "reference_status": "legacy source-assisted manual box; already observed by earlier models"
+        },
+        {
+          "id": "8090535_c3",
+          "material": "porcelain_ceramic",
+          "source_specific_material": "porcelain",
+          "xyxy": [
+            372,
+            294,
+            421,
+            323
+          ],
+          "reference_status": "legacy source-assisted manual box; already observed by earlier models"
+        }
+      ],
+      "evaluation_role": "pre-v2 frozen development diagnostic; not prospective or independent"
+    },
+    {
+      "record_id": "uk_material_2952166",
+      "image_file": "data/external/uk_material_sources_v1/images/uk_material_2952166.jpg",
+      "image_sha256": "691c33cbd32767f0055219e2827fd5f6e788aef709d869eb325269e23af20f23",
+      "width": 627,
+      "height": 640,
+      "asset_group": "denmead_fawley_lovedoan_20120516",
+      "source_page_url": "https://www.geograph.org.uk/photo/2952166",
+      "material_evidence": "ceramic insulators on its left side, and green glass ones on its right",
+      "boxes": [
+        {
+          "id": "2952166_c1",
+          "material": "porcelain_ceramic",
+          "source_specific_material": "ceramic",
+          "xyxy": [
+            264,
+            151,
+            277,
+            197
+          ],
+          "reference_status": "legacy source-assisted manual box; already observed by earlier models"
+        },
+        {
+          "id": "2952166_c2",
+          "material": "porcelain_ceramic",
+          "source_specific_material": "ceramic",
+          "xyxy": [
+            248,
+            256,
+            263,
+            304
+          ],
+          "reference_status": "legacy source-assisted manual box; already observed by earlier models"
+        },
+        {
+          "id": "2952166_c3",
+          "material": "porcelain_ceramic",
+          "source_specific_material": "ceramic",
+          "xyxy": [
+            252,
+            348,
+            267,
+            399
+          ],
+          "reference_status": "legacy source-assisted manual box; already observed by earlier models"
+        },
+        {
+          "id": "2952166_g1",
+          "material": "glass",
+          "source_specific_material": "glass",
+          "xyxy": [
+            338,
+            73,
+            352,
+            127
+          ],
+          "reference_status": "legacy source-assisted manual box; already observed by earlier models"
+        },
+        {
+          "id": "2952166_g2",
+          "material": "glass",
+          "source_specific_material": "glass",
+          "xyxy": [
+            356,
+            166,
+            371,
+            222
+          ],
+          "reference_status": "legacy source-assisted manual box; already observed by earlier models"
+        },
+        {
+          "id": "2952166_g3",
+          "material": "glass",
+          "source_specific_material": "glass",
+          "xyxy": [
+            348,
+            273,
+            364,
+            332
+          ],
+          "reference_status": "legacy source-assisted manual box; already observed by earlier models"
+        }
+      ],
+      "evaluation_role": "pre-v2 frozen development diagnostic; not prospective or independent"
+    },
+    {
+      "record_id": "uk_material_770272",
+      "image_file": "data/external/uk_material_sources_v1/images/uk_material_770272.jpg",
+      "image_sha256": "d105a16068e99024433b9e875febcfdff8c16d6e7127c6dafd8ce641658feff7",
+      "width": 427,
+      "height": 640,
+      "asset_group": "boyatt_wood_pylon_damage_20080408",
+      "source_page_url": "https://www.geograph.org.uk/photo/770272",
+      "material_evidence": "Porcelain insulators are used for the replacement because they are less vulnerable to vandalism.",
+      "boxes": [
+        {
+          "id": "770272_new_porcelain_string",
+          "material": "porcelain_ceramic",
+          "source_specific_material": "porcelain",
+          "xyxy": [
+            244,
+            218,
+            287,
+            399
+          ],
+          "unit": "complete visible replacement string from upper attachment to lower end fitting",
+          "annotation_method": "assistant manual pixel review before inference on this image",
+          "note": "Only the right-hand replacement string is assigned material truth. The lowered older assembly is not relabelled from visual appearance.",
+          "reference_status": "prospective for earlier MPID inference; already observed by material head v1"
+        }
+      ],
+      "evaluation_role": "pre-v2 frozen same-asset development diagnostic; not a new prospective test"
+    }
+  ],
+  "claim_boundary": "Thirteen source-assisted UK boxes across three images and three asset groups, frozen before material head v2 inference. All images were previously observed by other model variants, so this is development evidence, not prospective UK accuracy. No UK boxes may enter training or threshold calibration."
+}

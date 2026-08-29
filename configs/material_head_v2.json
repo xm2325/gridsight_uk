@@ -1,0 +1,42 @@
+{
+  "run": "runs/material_head/v2_mpid_substation_20260829",
+  "classes": ["glass", "porcelain_ceramic", "polymer_composite", "other"],
+  "encoder": "weights/siglip2-base-naflex-b53b807",
+  "encoder_sha256": "ac5f28bbdf92c0c1696ccbd3ce716426049cd67ad8045b66d0d938b0f9c8bbec",
+  "mpid_dataset": "data/external/mpid_material_detector_v1",
+  "mpid_manifest_sha256": "e89c72e9d81771d50b22f288ef24ceab32a890982674618d360b5fdcca608af6",
+  "substation_features": "runs/material_head/v1_20260828/features.npz",
+  "substation_features_sha256": "427a07a921648e5546bffd9c5f38690afcf18aee9763ff6dc6b2c280f40f0831",
+  "substation_index": "runs/material_head/v1_20260828/feature_index.json",
+  "substation_index_sha256": "989dd5b1473d50fabedeec33fb07318626ca2c0523e0cfd2eadbbaa851db30da",
+  "uk_targets": "data/uk_material_eval_v1/material_head_v2_targets.json",
+  "uk_targets_sha256": "6a35641b9859af914f843fc92eb319dc1c37b3950b8d6d7b4e99fc8bc42aaa84",
+  "mpid_largest_box_per_image": true,
+  "mpid_crop_limits_per_class": {"train": 400, "development": 60},
+  "minimum_native_side": 16,
+  "minimum_native_area": 512,
+  "context_padding": 0.12,
+  "batch_size": 24,
+  "classifier": {
+    "type": "two_layer_mlp",
+    "hidden_dimensions": 256,
+    "steps": 600,
+    "learning_rate": 0.003,
+    "weight_decay": 0.001,
+    "seed": 31,
+    "inverse_class_frequency_weighting": true,
+    "train_tight_and_context_views": true
+  },
+  "rejection": {
+    "minimum_logit_margin_floor": 0.5,
+    "correct_development_margin_quantile": 0.1,
+    "correct_development_similarity_quantile": 0.05,
+    "require_tight_context_agreement": true,
+    "require_class_centroid_similarity": true,
+    "other_is_abstention": true,
+    "calibrated_probability": false
+  },
+  "evaluation_scope": "MPID filename-family and Substation15 development diagnostics plus thirteen pre-v2-frozen, previously observed source-assisted UK boxes. No UK target enters training or threshold calibration. This is not prospective UK accuracy.",
+  "claim_boundary": "The v2 head can propose glass, porcelain/ceramic and polymer/composite, with other/OOD abstention. Logits and margins are not probabilities. UK results are development evidence only because all three assets were seen by earlier model variants.",
+  "budget": "One successful Roihu gputest job, at most ten minutes. Fixed data limits, architecture, optimisation and rejection quantiles. Infrastructure launch failures before model loading may be corrected, but no automatic model retry or threshold tuning."
+}

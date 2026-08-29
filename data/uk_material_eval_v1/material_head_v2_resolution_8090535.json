@@ -1,0 +1,148 @@
+{
+  "version": "uk-material-resolution-intervention-v1",
+  "created_at": "2026-08-29T16:02:00+01:00",
+  "record_id": "uk_material_8090535",
+  "asset_group": "hitchin_l6_d30_20250510",
+  "source_page_url": "https://www.geograph.org.uk/photo/8090535",
+  "commons_file_page_url": "https://commons.wikimedia.org/wiki/File:Balfour_Beatty_L6_D30_pylon,_Hitchin_-_geograph.org.uk_-_8090535.jpg",
+  "commons_api_query": "https://commons.wikimedia.org/w/api.php?action=query&format=json&prop=imageinfo&iiprop=url%7Csha1%7Csize%7Cextmetadata&titles=File%3ABalfour%20Beatty%20L6%20D30%20pylon%2C%20Hitchin%20-%20geograph.org.uk%20-%208090535.jpg",
+  "download_url": "https://upload.wikimedia.org/wikipedia/commons/7/7b/Balfour_Beatty_L6_D30_pylon%2C_Hitchin_-_geograph.org.uk_-_8090535.jpg",
+  "author": "Daniel Beardsmore",
+  "licence": "CC BY-SA 2.0",
+  "licence_url": "https://creativecommons.org/licenses/by-sa/2.0",
+  "material_evidence": "blue-tinted glass insulators rather than the brown-glazed porcelain insulators used originally",
+  "low_resolution": {
+    "image_file": "data/external/uk_material_sources_v1/images/uk_material_8090535.jpg",
+    "sha256": "630191b16e8709ad040e80304df072318e6863216cc3f6394a20d553949dd3c2",
+    "width": 640,
+    "height": 480
+  },
+  "high_resolution": {
+    "image_file": "data/external/uk_material_sources_v1/originals/uk_material_8090535_2560.jpg",
+    "sha256": "f96c720c155d1cf9bad754f0b7a382f26934f6bb83933f3a060c38a6622e725a",
+    "width": 2560,
+    "height": 1920,
+    "commons_sha1": "ab257bb8490697ea453efe4e5a93da305bf40471",
+    "api_snapshot_file": "data/external/uk_material_sources_v1/originals/uk_material_8090535_commons_api.json",
+    "api_snapshot_sha256": "931f396ae99078addbbeeb6584d380b6eb8ceecf35c1d925b5451cab6a29a7e3"
+  },
+  "high_resolution_model_inference_performed_before_freeze": false,
+  "head_and_thresholds_already_fixed": true,
+  "boxes": [
+    {
+      "id": "8090535_g1",
+      "material": "glass",
+      "source_specific_material": "glass",
+      "xyxy": [
+        952,
+        428,
+        1304,
+        496
+      ],
+      "reference_status": "legacy source-assisted manual box; already observed by earlier models",
+      "xyxy_low_resolution": [
+        238,
+        107,
+        326,
+        124
+      ],
+      "coordinate_transform": "exact 4.0x scale from the 640x480 derivative to the 2560x1920 Commons original; no post-inference edit"
+    },
+    {
+      "id": "8090535_g2",
+      "material": "glass",
+      "source_specific_material": "glass",
+      "xyxy": [
+        936,
+        840,
+        1348,
+        908
+      ],
+      "reference_status": "legacy source-assisted manual box; already observed by earlier models",
+      "xyxy_low_resolution": [
+        234,
+        210,
+        337,
+        227
+      ],
+      "coordinate_transform": "exact 4.0x scale from the 640x480 derivative to the 2560x1920 Commons original; no post-inference edit"
+    },
+    {
+      "id": "8090535_g3",
+      "material": "glass",
+      "source_specific_material": "glass",
+      "xyxy": [
+        956,
+        1184,
+        1332,
+        1256
+      ],
+      "reference_status": "legacy source-assisted manual box; already observed by earlier models",
+      "xyxy_low_resolution": [
+        239,
+        296,
+        333,
+        314
+      ],
+      "coordinate_transform": "exact 4.0x scale from the 640x480 derivative to the 2560x1920 Commons original; no post-inference edit"
+    },
+    {
+      "id": "8090535_c1",
+      "material": "porcelain_ceramic",
+      "source_specific_material": "porcelain",
+      "xyxy": [
+        1460,
+        412,
+        1644,
+        524
+      ],
+      "reference_status": "legacy source-assisted manual box; already observed by earlier models",
+      "xyxy_low_resolution": [
+        365,
+        103,
+        411,
+        131
+      ],
+      "coordinate_transform": "exact 4.0x scale from the 640x480 derivative to the 2560x1920 Commons original; no post-inference edit"
+    },
+    {
+      "id": "8090535_c2",
+      "material": "porcelain_ceramic",
+      "source_specific_material": "porcelain",
+      "xyxy": [
+        1536,
+        832,
+        1724,
+        944
+      ],
+      "reference_status": "legacy source-assisted manual box; already observed by earlier models",
+      "xyxy_low_resolution": [
+        384,
+        208,
+        431,
+        236
+      ],
+      "coordinate_transform": "exact 4.0x scale from the 640x480 derivative to the 2560x1920 Commons original; no post-inference edit"
+    },
+    {
+      "id": "8090535_c3",
+      "material": "porcelain_ceramic",
+      "source_specific_material": "porcelain",
+      "xyxy": [
+        1488,
+        1176,
+        1684,
+        1292
+      ],
+      "reference_status": "legacy source-assisted manual box; already observed by earlier models",
+      "xyxy_low_resolution": [
+        372,
+        294,
+        421,
+        323
+      ],
+      "coordinate_transform": "exact 4.0x scale from the 640x480 derivative to the 2560x1920 Commons original; no post-inference edit"
+    }
+  ],
+  "claim_boundary": "Within-image resolution intervention on six source-assisted development boxes. It tests whether native pixels change the already-fixed v2 decision; it is not a new asset, independent truth, or UK accuracy."
+}
