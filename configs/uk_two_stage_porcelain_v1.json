@@ -1,0 +1,44 @@
+{
+  "run": "runs/material_head/uk_two_stage_770272_v1",
+  "image": "data/external/uk_material_sources_v1/images/uk_material_770272.jpg",
+  "image_sha256": "d105a16068e99024433b9e875febcfdff8c16d6e7127c6dafd8ce641658feff7",
+  "freeze": "data/uk_material_eval_v1/prospective_freeze_770272.json",
+  "freeze_sha256": "c06c08492b62efa17d64edb0502c5c68fbc06ba82c13898b07d035527d25157d",
+  "head": "runs/material_head/v1_20260828/head.npz",
+  "head_sha256": "5e9037f738433ab684bcb2ead4150f6e1ff93feef66a1cdb4ad3b965a3fc9707",
+  "encoder": "weights/siglip2-base-naflex-b53b807",
+  "encoder_sha256": "ac5f28bbdf92c0c1696ccbd3ce716426049cd67ad8045b66d0d938b0f9c8bbec",
+  "classes": ["glass", "porcelain", "other"],
+  "minimum_native_side": 16,
+  "minimum_native_area": 512,
+  "context_padding": 0.12,
+  "rejection": {
+    "minimum_logit_margin": 0.5,
+    "require_tight_context_agreement": true,
+    "other_is_abstention": true,
+    "calibrated_probability": false
+  },
+  "crops": [
+    {
+      "id": "frozen_complete_assembly",
+      "xyxy": [244, 218, 287, 399],
+      "origin": "prospective reference frozen before inference",
+      "expected_material": "porcelain"
+    },
+    {
+      "id": "mpid_high_score_partial",
+      "xyxy": [255.83035278320312, 245.34417724609375, 283.6394958496094, 379.0284423828125],
+      "origin": "fixed raw MPID detector output from job 938791",
+      "expected_material": null
+    },
+    {
+      "id": "mpid_iou_match_partial",
+      "xyxy": [254.796875, 248.98678588867188, 284.1219177246094, 382.68310546875],
+      "origin": "fixed raw MPID detector output from job 938791; IoU 0.503745 with reference",
+      "expected_material": null
+    }
+  ],
+  "protocol": "Inference only. Compare the frozen complete assembly with two detector fragments selected and fixed from the already completed prospective run. Reuse the frozen SigLIP2 encoder, linear head and rejection rule without tuning.",
+  "claim_boundary": "One same-asset UK porcelain crop diagnostic. The head distinguishes glass, porcelain and other only; it has no polymer/composite class. Logits and margins are uncalibrated and this is not UK accuracy.",
+  "budget": "Exactly one gputest inference job, at most five minutes. Never resubmit automatically."
+}

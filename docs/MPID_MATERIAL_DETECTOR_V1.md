@@ -41,6 +41,8 @@ Image 770272 was acquired after the first UK inference. Its source page identifi
 
 Inference-only job **938791** completed with exit `0:0` in 10 seconds. A prediction overlapped the frozen complete-string box at IoU 0.504 but labelled it composite rather than porcelain. Its raw score was 0.071, so the fixed diagnostic gate returned `unknown`. A shorter partial box on the same porcelain string received composite score 0.730 and passed the per-box score/pixel gate. This is the decisive failure: confidence and native-pixel thresholds cannot determine whether a box covers the complete physical assembly.
 
+An inference-only follow-up then applied the existing frozen SigLIP2 glass / porcelain / other head to three crops fixed before that comparison: the full source-supported porcelain assembly and the two MPID fragments above. Roihu job **940144** completed with exit `0:0` in 18 seconds. All three crops were classified as glass, including the full assembly (tight/context logit margins 0.834/1.160). Thus full-assembly cropping alone does not repair the current head's UK domain error. The head also has no polymer class. This negative result is retained in the English report rather than hidden or relabelled.
+
 ## Architecture decision
 
 The direct three-material detector is retained as an additional proposal generator, not promoted to the final material decision. The next implementation should:

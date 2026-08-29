@@ -8,6 +8,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 RUN=ROOT/'runs/mpid_material_detector/v1_20260829'
 PROSPECTIVE=ROOT/'runs/mpid_material_detector/prospective_770272_v1/results.json'
+TWO_STAGE=ROOT/'runs/material_head/uk_two_stage_770272_v1/results.json'
 OUT=ROOT/'runs/mpid_material_detector/report_v1_20260829/report'
 
 def sha(path:Path)->str:return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -18,7 +19,9 @@ def main():
     if OUT.exists():shutil.rmtree(OUT)
     (OUT/'images').mkdir(parents=True)
     run=load(RUN/'results.json');source=load(ROOT/'data/external/uk_material_sources_v1/manifest.json')
-    prospective=load(PROSPECTIVE);mpid=load(ROOT/'data/external/mpid_material_detector_v1/manifest.json')
+    prospective=load(PROSPECTIVE);two_stage=load(TWO_STAGE);mpid=load(ROOT/'data/external/mpid_material_detector_v1/manifest.json')
+    if two_stage['status']!='COMPLETE' or two_stage['runtime']['job_id']!='940144':
+        raise ValueError('Refuse to publish an incomplete or unexpected two-stage diagnostic')
     old_refs=load(ROOT/'data/v4_annotations/material_reference_v44.json')
     references={record['record_id'].replace('POS_','uk_material_'):[{'id':box['id'],'material':box['material_task_label'],
       'source_specific_material':box['source_specific_material'],'xyxy':box['xyxy'],'status':'legacy_source_assisted_reference'} for box in record['boxes']]
@@ -45,15 +48,20 @@ def main():
       'metrics':run['mpid_development_metrics'],'metrics_scope':run['mpid_metrics_scope'],'checkpoint_sha256':run['checkpoint_sha256']},
       'mpid_audit':{'prepared_images':len(mpid['rows']),'exact_duplicate_groups':len(mpid['exact_duplicate_groups']),
         'cross_material_conflicts':mpid['cross_material_exact_conflicts_quarantined'],'origin_families':mpid['origin_family_count'],
-        'split_warning':mpid['split_warning']},'prospective':prospective['prospective_diagnostic'],'images':rows,
+        'split_warning':mpid['split_warning']},'prospective':prospective['prospective_diagnostic'],
+      'two_stage':{'job_id':two_stage['runtime']['job_id'],'status':two_stage['status'],'classes':two_stage['classes'],
+        'comparisons':two_stage['comparisons'],'claim_boundary':two_stage['claim_boundary'],
+        'head_gradient_steps':two_stage['head_gradient_steps'],'encoder_gradient_steps':two_stage['encoder_gradient_steps']},'images':rows,
       'interpretation':{
         'direct_detector':'Useful as an additional proposal generator, but not a deployable UK material decision system.',
         'prospective_result':'The frozen porcelain string was barely localised at IoU 0.504, classified as polymer/composite, and rejected to unknown only because the matching score was below the fixed gate.',
         'critical_failure':'A shorter partial box on the same porcelain string received raw polymer/composite score 0.730 and passed the per-box gate. Confidence alone cannot detect incomplete assemblies.',
-        'next_architecture':'Union material-agnostic and MPID proposals; consolidate each complete physical assembly; classify tight dielectric and context crops; require agreement, native pixels, completeness and target-domain calibration; otherwise return unknown.'}}
+        'two_stage_result':'The existing glass / porcelain / other SigLIP2 head classified the frozen complete porcelain assembly and both detector fragments as glass. Full-assembly cropping did not repair material transfer.',
+        'next_architecture':'Union material-agnostic and MPID proposals; consolidate each complete physical assembly; train a target-relevant glass / porcelain / composite head; add out-of-distribution and completeness rejection; calibrate only on frozen UK asset groups; otherwise return unknown.'}}
     data=OUT/'data.json';write(data,payload)
     template=(ROOT/'templates/mpid_material_report.html').read_text();(OUT/'index.html').write_text(template.replace('__DATA__',json.dumps(payload).replace('</','<\\/')))
     verification={'status':'VERIFIED_REPORT_BUILD','source_result_sha256':sha(RUN/'results.json'),'prospective_result_sha256':sha(PROSPECTIVE),
+      'two_stage_result_sha256':sha(TWO_STAGE),'two_stage_job_id':two_stage['runtime']['job_id'],
       'prospective_freeze_sha256':sha(ROOT/'data/uk_material_eval_v1/prospective_freeze_770272.json'),'data_sha256':sha(data),
       'image_count':len(rows),'language':'English','raw_predictions_preserved':True,'pseudo_labels_used_as_truth':False}
     write(OUT/'verification.json',verification);print(json.dumps(verification,indent=2))

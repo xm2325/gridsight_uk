@@ -51,7 +51,17 @@ class MPIDMaterialDetectorTests(unittest.TestCase):
         template=(ROOT/'templates/mpid_material_report.html').read_text()
         self.assertIn('Previous image',template)
         self.assertIn('Next image',template)
+        self.assertIn('Frozen two-stage crop check',template)
+        self.assertIn('twoStage',template)
         self.assertNotRegex(template,r'[\u4e00-\u9fff]')
+
+    def test_two_stage_protocol_pins_complete_and_partial_crops(self):
+        cfg=json.loads((ROOT/'configs/uk_two_stage_porcelain_v1.json').read_text())
+        self.assertEqual(cfg['crops'][0]['xyxy'],[244,218,287,399])
+        self.assertEqual(cfg['crops'][0]['expected_material'],'porcelain')
+        self.assertEqual(len(cfg['crops']),3)
+        self.assertEqual(cfg['classes'],['glass','porcelain','other'])
+        self.assertIn('no polymer/composite class',cfg['claim_boundary'])
 
 
 if __name__=='__main__':unittest.main()
