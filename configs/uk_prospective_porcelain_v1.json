@@ -1,0 +1,22 @@
+{
+  "protocol_id": "uk-prospective-porcelain-v1",
+  "run": "runs/mpid_material_detector/prospective_770272_v1",
+  "checkpoint": "runs/mpid_material_detector/v1_20260829/training/weights/last.pt",
+  "checkpoint_sha256": "b3aef1f1090e6321005e8ac52300c37a53a5223040f79de0aa28bc03171ba868",
+  "image": "data/external/uk_material_sources_v1/images/uk_material_770272.jpg",
+  "image_sha256": "d105a16068e99024433b9e875febcfdff8c16d6e7127c6dafd8ce641658feff7",
+  "freeze": "data/uk_material_eval_v1/prospective_freeze_770272.json",
+  "freeze_sha256": "c06c08492b62efa17d64edb0502c5c68fbc06ba82c13898b07d035527d25157d",
+  "classes": ["glass", "porcelain_ceramic", "polymer_composite"],
+  "inference": {"imgsz": 1280, "conf": 0.05, "iou": 0.5, "max_det": 100, "augment": false},
+  "preregistered_diagnostic_gate": {
+    "reference_iou": 0.5,
+    "display_score_floor": 0.25,
+    "minimum_native_side": 16,
+    "minimum_native_area": 512,
+    "overlap_conflict_iou": 0.5,
+    "conflicting_class_score_floor": 0.15,
+    "minimum_class_margin": 0.15
+  },
+  "claim_boundary": "One prospective same-asset UK porcelain diagnostic. Thresholds are fixed before inference but raw detector scores are not calibrated probabilities."
+}

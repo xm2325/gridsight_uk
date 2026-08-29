@@ -10,8 +10,6 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-from PIL import Image
-
 ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'data/external/uk_material_sources_v1'
 UA='GridSight-UK-material-source-audit/1.0 (+https://github.com/xm2325/gridsight_uk)'
@@ -33,12 +31,44 @@ SOURCES=[
  {'photo_id':'3809215','author':'Peter Facey','country':'England','asset_group':'park_hills_wood_20140110',
   'materials':['glass'],'evidence':'showing up the glass insulators',
   'use':'new_candidate_requires_pixel_and_box_review'},
+ {'photo_id':'770248','author':'Peter Facey','country':'England','asset_group':'boyatt_wood_pylon_damage_20080408',
+  'materials':['glass'],'evidence':'The glass insulators are vulnerable to catapults or air guns.',
+  'use':'new_candidate_requires_pixel_and_box_review'},
+ {'photo_id':'770272','author':'Peter Facey','country':'England','asset_group':'boyatt_wood_pylon_damage_20080408',
+  'materials':['porcelain_ceramic'],'evidence':'Porcelain insulators are used for the replacement because they are less vulnerable to vandalism.',
+  'use':'prospective_same_asset_porcelain_candidate_freeze_before_inference'},
+ {'photo_id':'6714446','author':'Peter Facey','country':'England','asset_group':'chilcomb_11kv_substation_20201225',
+  'materials':['porcelain_ceramic'],'evidence':'four separate wires strung on ceramic insulators',
+  'use':'new_candidate_requires_pixel_and_box_review'},
  {'photo_id':'7880016','author':'DS Pugh','country':'England','asset_group':'marazion_old_telegraph_20240903',
   'materials':['porcelain_ceramic'],'evidence':'a fairly old pole, with ceramic insulators in place',
   'use':'auxiliary_telegraph_morphology_not_primary_power_evaluation'},
 ]
 
 def digest(payload:bytes)->str:return hashlib.sha256(payload).hexdigest()
+
+def jpeg_size(payload:bytes)->tuple[int,int]:
+    """Validate a JPEG container and return width, height without optional packages."""
+    if len(payload)<4 or payload[:2]!=b'\xff\xd8':raise ValueError('Not a JPEG container')
+    offset=2
+    sof={0xC0,0xC1,0xC2,0xC3,0xC5,0xC6,0xC7,0xC9,0xCA,0xCB,0xCD,0xCE,0xCF}
+    while offset+4<=len(payload):
+        while offset<len(payload) and payload[offset]==0xFF:offset+=1
+        if offset>=len(payload):break
+        marker=payload[offset];offset+=1
+        if marker in {0xD8,0xD9}:continue
+        if marker==0xDA:break
+        if offset+2>len(payload):break
+        length=int.from_bytes(payload[offset:offset+2],'big')
+        if length<2 or offset+length>len(payload):raise ValueError('Malformed JPEG segment')
+        if marker in sof:
+            if length<7:raise ValueError('Malformed JPEG SOF segment')
+            height=int.from_bytes(payload[offset+3:offset+5],'big')
+            width=int.from_bytes(payload[offset+5:offset+7],'big')
+            if width<1 or height<1:raise ValueError('Invalid JPEG dimensions')
+            return width,height
+        offset+=length
+    raise ValueError('JPEG has no supported start-of-frame marker')
 
 def fetch(url:str)->bytes:
     errors=[]
@@ -52,7 +82,7 @@ def fetch(url:str)->bytes:
 
 def extract(page:bytes,photo_id:str)->tuple[str,str,str]:
     text=page.decode('latin-1')
-    image=re.search(r'https://s\d\.geograph\.org\.uk/geophotos/[^"&]+/'+re.escape(photo_id)+r'_[0-9a-f]+\.jpg',text)
+    image=re.search(r'https://s\d\.geograph\.org\.uk/(?:geophotos/[^"&]+/|photos/\d+/\d+/)'+re.escape(photo_id)+r'_[0-9a-f]+\.jpg',text)
     licence=re.search(r'rel="license" href="([^"]+)"',text)
     title=re.search(r'<meta property="og:title" content="([^"]+)"',text)
     if not (image and licence and title):raise ValueError(f'Incomplete Geograph metadata for {photo_id}')
@@ -65,9 +95,7 @@ def main():
         photo_id=source['photo_id'];page_url=f'https://www.geograph.org.uk/photo/{photo_id}'
         page=fetch(page_url);image_url,licence_url,title=extract(page,photo_id)
         image=fetch(image_url);path=OUT/'images'/f'uk_material_{photo_id}.jpg';path.write_bytes(image)
-        with Image.open(path) as opened:
-            opened.verify();width,height=opened.size;fmt=opened.format
-        if fmt!='JPEG':raise ValueError(f'Expected JPEG for {photo_id}, got {fmt}')
+        width,height=jpeg_size(image)
         rows.append({**source,'record_id':f'uk_material_{photo_id}','title':title,
           'photo_page_url':page_url,'image_url':image_url,'licence_url':licence_url,
           'licence':'CC BY-SA 2.0','image_file':str(path.relative_to(ROOT)),

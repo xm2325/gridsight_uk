@@ -8,7 +8,7 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'scripts'))
 from component_mask_metrics import pole_end_candidate,mask_matches,decode_masks
 from resume_component_masks import training_audit
-from acquire_uk_material_sources import SOURCES
+from acquire_uk_material_sources import SOURCES,jpeg_size
 from download_mpid import FILES as MPID_FILES
 from audit_mpid_archives import origin_key
 from sample_mpid_units import choose
@@ -27,18 +27,22 @@ class ComponentMaskTests(unittest.TestCase):
         self.assertTrue(protocol['uk_final_gate']['freeze_before_inference'])
 
     def test_uk_material_sources_preserve_groups_and_do_not_claim_truth(self):
-        self.assertGreaterEqual(len(SOURCES),6)
+        self.assertGreaterEqual(len(SOURCES),9)
         ids=[row['photo_id'] for row in SOURCES]
         self.assertEqual(len(ids),len(set(ids)))
         grouped={row['photo_id']:row['asset_group'] for row in SOURCES}
         self.assertEqual(grouped['3209028'],grouped['3208894'])
         self.assertNotEqual(grouped['3209028'],grouped['3809215'])
+        self.assertNotEqual(grouped['770248'],grouped['6714446'])
         self.assertTrue(all(row['evidence'] and row['author'] for row in SOURCES))
         self.assertTrue(all('candidate' in row['use'] or 'legacy' in row['use'] or 'auxiliary' in row['use'] for row in SOURCES))
         audit=json.loads((ROOT/'docs/UK_MATERIAL_SOURCE_PIXEL_AUDIT_V1.json').read_text())
         self.assertFalse(audit['model_inference_performed'])
         self.assertEqual(audit['summary']['records'],len(SOURCES))
-        self.assertIn('adding more independent UK groups',audit['next_gate'])
+        self.assertIn('model output never supplies their truth',audit['next_gate'])
+
+    def test_jpeg_size_rejects_non_jpeg(self):
+        with self.assertRaises(ValueError):jpeg_size(b'not an image')
 
     def test_mpid_download_pins_all_three_archives(self):
         self.assertEqual({name.split('_')[0] for name,_ in MPID_FILES},{'glass','porcelain','composite'})
@@ -54,10 +58,10 @@ class ComponentMaskTests(unittest.TestCase):
             self.skipTest('Optional acquired UK material sources are not in the source release')
         build_uk_source_pool.main()
         pool=json.loads((ROOT/'data/external/uk_source_pool_v1/manifest.json').read_text())
-        self.assertEqual(pool['count'],33)
+        self.assertEqual(pool['count'],36)
         self.assertEqual(pool['counts']['provenance_only'],27)
-        self.assertEqual(pool['counts']['source_evidenced_material_candidate'],6)
-        self.assertEqual(pool['counts']['new_primary_material_candidates'],3)
+        self.assertEqual(pool['counts']['source_evidenced_material_candidate'],9)
+        self.assertEqual(pool['counts']['new_primary_material_candidates'],5)
         self.assertFalse(pool['split_frozen'])
 
     def test_duplicate_final_callback_is_not_an_extra_training_epoch(self):

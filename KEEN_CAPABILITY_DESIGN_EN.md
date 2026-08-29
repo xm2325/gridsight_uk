@@ -2,7 +2,7 @@
 
 27 August 2026. This is an engineering design and a bounded development diagnostic, not a claim about Keen AI's proprietary model or the performance of its screenshot.
 
-**28 August update:** the small public-data material demo and one fixed supervised pilot are complete; porcelain recognition remains unresolved. A larger explicitly labelled public substation source has now passed archive and sample-mask format checks. See the [current capability lab](docs/CAPABILITY_LAB.md) and [source audit](docs/SUBSTATION15_AUDIT.md). The historical UK-specific requirements below still apply to UK validation; they do not prohibit a separately labelled public-data demonstration or imply that the user must supply new photos. No new training was launched by this audit.
+**29 August update:** a fixed two-epoch MPID three-material detector and one prospective same-asset UK porcelain check are complete on Roihu. Internal MPID filename-family mAP50 reached 0.761, but the prospective porcelain string was classified as composite and only avoided an accepted wrong result because the matching box fell below the fixed score gate. A shorter wrong-material fragment received score 0.730 and passed the per-box gate. This proves that the direct detector is useful for proposals but not safe as the final UK material decision. See the [MPID detector record](docs/MPID_MATERIAL_DETECTOR_V1.md), [current capability lab](docs/CAPABILITY_LAB.md) and [source audit](docs/SUBSTATION15_AUDIT.md).
 
 ## Architecture to build towards
 
@@ -29,6 +29,8 @@ Slurm job 915794 completed successfully in 31 seconds (Python inference workflow
 On close-up 7106830, the first clearly visible insulator's tight crop ranked polymer slightly above porcelain, while the contextual crop reversed that order. This illustrates instability without establishing its true material. The structural branch produced 35 proposals across 27 images at score 0.30. On 7106830 it roughly located the support assembly but included unrelated extent; on 5722811 its higher-scoring box covered almost the entire pole. These failures are retained in the report. Neither more candidates nor a higher score proves improved recognition.
 
 **Recommended next trainable baseline:** retain a reviewed component detector, then compare a small supervised classification head on frozen SigLIP2 features against a direct joint material-aware detector. Use glass, porcelain, polymer and unknown/rejection semantics, with equipment-box, metal-fitting and other hard negatives. The two-stage design makes detector and material errors easier to diagnose; a direct joint detector is simpler but can conflate missing components and wrong material.
+
+That direct comparison has now been executed with MPID. The result confirms the anticipated conflation: many UK predictions cover only a fragment, while the material class remains highly confident. The next material release must union material-agnostic and material-aware proposals, enforce a complete-assembly unit, and classify the dielectric crop separately. A rejection gate must include assembly completeness; raw score, native pixels and class margin alone are insufficient.
 
 SigLIP2 supports image-text retrieval and transferable visual representations; this makes it a practical initial feature extractor, not a validated insulator-material classifier. The work is by Michael Tschannen, Alexey Gritsenko and colleagues. [Paper](https://arxiv.org/abs/2502.14786) · [Official Google model](https://huggingface.co/google/siglip2-base-patch16-naflex)
 

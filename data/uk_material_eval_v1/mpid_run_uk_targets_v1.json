@@ -1,0 +1,238 @@
+{
+  "version": "uk-material-sources-v1",
+  "created_at": "2026-08-29T10:23:03.318279+00:00",
+  "selection": "Public UK pages with explicit material descriptions; not selected from model output.",
+  "count": 8,
+  "independent_asset_groups": 7,
+  "asset_groups": {
+    "denmead_fawley_lovedoan_20120516": [
+      "uk_material_2952166"
+    ],
+    "hitchin_l6_d30_20250510": [
+      "uk_material_8090535"
+    ],
+    "mayles_lane_4ye030_20120524": [
+      "uk_material_3209028",
+      "uk_material_3208894"
+    ],
+    "park_hills_wood_20140110": [
+      "uk_material_3809215"
+    ],
+    "boyatt_wood_pylon_damage_20080408": [
+      "uk_material_770248"
+    ],
+    "chilcomb_11kv_substation_20201225": [
+      "uk_material_6714446"
+    ],
+    "marazion_old_telegraph_20240903": [
+      "uk_material_7880016"
+    ]
+  },
+  "images": [
+    {
+      "photo_id": "2952166",
+      "author": "Peter Facey",
+      "country": "England",
+      "asset_group": "denmead_fawley_lovedoan_20120516",
+      "materials": [
+        "glass",
+        "porcelain_ceramic"
+      ],
+      "evidence": "ceramic insulators on its left side, and green glass ones on its right",
+      "use": "legacy_adaptive_development_not_new_evaluation",
+      "record_id": "uk_material_2952166",
+      "title": "400 KV Pylon with mobile phone aerials &copy; Peter Facey cc-by-sa/2.0",
+      "photo_page_url": "https://www.geograph.org.uk/photo/2952166",
+      "image_url": "https://s0.geograph.org.uk/geophotos/02/95/21/2952166_879bdeb6.jpg",
+      "licence_url": "http://creativecommons.org/licenses/by-sa/2.0/",
+      "licence": "CC BY-SA 2.0",
+      "image_file": "data/external/uk_material_sources_v1/images/uk_material_2952166.jpg",
+      "image_sha256": "691c33cbd32767f0055219e2827fd5f6e788aef709d869eb325269e23af20f23",
+      "source_page_sha256_at_acquisition": "ba199197cf53de3f525c967d5199c89269d7994b78440d0f1b51bd2653c980b7",
+      "width": 627,
+      "height": 640,
+      "bytes": 156015,
+      "model_inference_performed": false,
+      "material_truth_status": "source_evidenced_candidate_not_box_reviewed"
+    },
+    {
+      "photo_id": "8090535",
+      "author": "Daniel Beardsmore",
+      "country": "England",
+      "asset_group": "hitchin_l6_d30_20250510",
+      "materials": [
+        "glass",
+        "porcelain_ceramic"
+      ],
+      "evidence": "blue-tinted glass insulators rather than the brown-glazed porcelain insulators used originally",
+      "use": "legacy_material_reference_not_new_evaluation",
+      "record_id": "uk_material_8090535",
+      "title": "Balfour Beatty L6 D30 pylon, Hitchin &copy; Daniel Beardsmore",
+      "photo_page_url": "https://www.geograph.org.uk/photo/8090535",
+      "image_url": "https://s0.geograph.org.uk/geophotos/08/09/05/8090535_97e777ce.jpg",
+      "licence_url": "http://creativecommons.org/licenses/by-sa/2.0/",
+      "licence": "CC BY-SA 2.0",
+      "image_file": "data/external/uk_material_sources_v1/images/uk_material_8090535.jpg",
+      "image_sha256": "630191b16e8709ad040e80304df072318e6863216cc3f6394a20d553949dd3c2",
+      "source_page_sha256_at_acquisition": "990977b07d1aaeb1a093e07bb79002a8cb15de15eb971c8148ade8ad4a70456d",
+      "width": 640,
+      "height": 480,
+      "bytes": 94438,
+      "model_inference_performed": false,
+      "material_truth_status": "source_evidenced_candidate_not_box_reviewed"
+    },
+    {
+      "photo_id": "3209028",
+      "author": "Peter Facey",
+      "country": "England",
+      "asset_group": "mayles_lane_4ye030_20120524",
+      "materials": [
+        "glass"
+      ],
+      "evidence": "These insulators are made of toughened glass.",
+      "use": "new_candidate_requires_pixel_and_box_review",
+      "record_id": "uk_material_3209028",
+      "title": "400 KV Line Refurbishment, Mayles Lane &copy; Peter Facey cc-by-sa/2.0",
+      "photo_page_url": "https://www.geograph.org.uk/photo/3209028",
+      "image_url": "https://s0.geograph.org.uk/geophotos/03/20/90/3209028_f7fb31bb.jpg",
+      "licence_url": "http://creativecommons.org/licenses/by-sa/2.0/",
+      "licence": "CC BY-SA 2.0",
+      "image_file": "data/external/uk_material_sources_v1/images/uk_material_3209028.jpg",
+      "image_sha256": "2a891658aed1f96a6279cdacfc02548b97cfdb09d45ec87260622db39cf24361",
+      "source_page_sha256_at_acquisition": "fda246c49202a41f41e32a27a1022d132013934d20a796d9b1a46c1f15ad844b",
+      "width": 427,
+      "height": 640,
+      "bytes": 226184,
+      "model_inference_performed": false,
+      "material_truth_status": "source_evidenced_candidate_not_box_reviewed"
+    },
+    {
+      "photo_id": "3208894",
+      "author": "Peter Facey",
+      "country": "England",
+      "asset_group": "mayles_lane_4ye030_20120524",
+      "materials": [
+        "porcelain_ceramic"
+      ],
+      "evidence": "There are 22 porcelain insulators in each of the two strings.",
+      "use": "new_candidate_grouped_with_3209028",
+      "record_id": "uk_material_3208894",
+      "title": "400 KV Line Refurbishment, Mayles Lane &copy; Peter Facey cc-by-sa/2.0",
+      "photo_page_url": "https://www.geograph.org.uk/photo/3208894",
+      "image_url": "https://s0.geograph.org.uk/geophotos/03/20/88/3208894_37a5d596.jpg",
+      "licence_url": "http://creativecommons.org/licenses/by-sa/2.0/",
+      "licence": "CC BY-SA 2.0",
+      "image_file": "data/external/uk_material_sources_v1/images/uk_material_3208894.jpg",
+      "image_sha256": "0661fc7fd65b8a1aae54cff0d6a4917e73fed51010946891cdd8c9149341d33b",
+      "source_page_sha256_at_acquisition": "bc076e797f786bd552e3b209ae2125cc1167af81ccc8d83a14c0873bf94eca08",
+      "width": 414,
+      "height": 640,
+      "bytes": 127611,
+      "model_inference_performed": false,
+      "material_truth_status": "source_evidenced_candidate_not_box_reviewed"
+    },
+    {
+      "photo_id": "3809215",
+      "author": "Peter Facey",
+      "country": "England",
+      "asset_group": "park_hills_wood_20140110",
+      "materials": [
+        "glass"
+      ],
+      "evidence": "showing up the glass insulators",
+      "use": "new_candidate_requires_pixel_and_box_review",
+      "record_id": "uk_material_3809215",
+      "title": "400KV pylon east of Park Hills Wood &copy; Peter Facey",
+      "photo_page_url": "https://www.geograph.org.uk/photo/3809215",
+      "image_url": "https://s0.geograph.org.uk/geophotos/03/80/92/3809215_d78dd943.jpg",
+      "licence_url": "http://creativecommons.org/licenses/by-sa/2.0/",
+      "licence": "CC BY-SA 2.0",
+      "image_file": "data/external/uk_material_sources_v1/images/uk_material_3809215.jpg",
+      "image_sha256": "3e596bb5c8101626c33d57a9b03f0d3fe765d847d5e03bc6414ed4577437442d",
+      "source_page_sha256_at_acquisition": "404c69de3544edb8c26102fc31f581ac41443d37348f4e0718aac9037fbd00e8",
+      "width": 434,
+      "height": 640,
+      "bytes": 107403,
+      "model_inference_performed": false,
+      "material_truth_status": "source_evidenced_candidate_not_box_reviewed"
+    },
+    {
+      "photo_id": "770248",
+      "author": "Peter Facey",
+      "country": "England",
+      "asset_group": "boyatt_wood_pylon_damage_20080408",
+      "materials": [
+        "glass"
+      ],
+      "evidence": "The glass insulators are vulnerable to catapults or air guns.",
+      "use": "new_candidate_requires_pixel_and_box_review",
+      "record_id": "uk_material_770248",
+      "title": "Pylons are bigger than you think (1) &copy; Peter Facey cc-by-sa/2.0",
+      "photo_page_url": "https://www.geograph.org.uk/photo/770248",
+      "image_url": "https://s0.geograph.org.uk/photos/77/02/770248_5017073f.jpg",
+      "licence_url": "http://creativecommons.org/licenses/by-sa/2.0/",
+      "licence": "CC BY-SA 2.0",
+      "image_file": "data/external/uk_material_sources_v1/images/uk_material_770248.jpg",
+      "image_sha256": "346c724e755ba01fc7563c9089101e97da4ea4b537aee587a0ff948fb321f2cf",
+      "source_page_sha256_at_acquisition": "1109b7ca268fd0458cd0156575dec9a2c8a087ccbd4accb003a767968b85e22d",
+      "width": 427,
+      "height": 640,
+      "bytes": 91697,
+      "model_inference_performed": false,
+      "material_truth_status": "source_evidenced_candidate_not_box_reviewed"
+    },
+    {
+      "photo_id": "6714446",
+      "author": "Peter Facey",
+      "country": "England",
+      "asset_group": "chilcomb_11kv_substation_20201225",
+      "materials": [
+        "porcelain_ceramic"
+      ],
+      "evidence": "four separate wires strung on ceramic insulators",
+      "use": "new_candidate_requires_pixel_and_box_review",
+      "record_id": "uk_material_6714446",
+      "title": "Electricity substation at Chilcomb &copy; Peter Facey cc-by-sa/2.0",
+      "photo_page_url": "https://www.geograph.org.uk/photo/6714446",
+      "image_url": "https://s0.geograph.org.uk/geophotos/06/71/44/6714446_9bb036c6.jpg",
+      "licence_url": "http://creativecommons.org/licenses/by-sa/2.0/",
+      "licence": "CC BY-SA 2.0",
+      "image_file": "data/external/uk_material_sources_v1/images/uk_material_6714446.jpg",
+      "image_sha256": "6981e3921991223d308b55f199507c7c5337aec5235b00f09c61d516b45cfe19",
+      "source_page_sha256_at_acquisition": "fbc3f26718d9d5575b7e222628012e17468716c3b5f4a71427315a9a17bd199c",
+      "width": 480,
+      "height": 640,
+      "bytes": 80274,
+      "model_inference_performed": false,
+      "material_truth_status": "source_evidenced_candidate_not_box_reviewed"
+    },
+    {
+      "photo_id": "7880016",
+      "author": "DS Pugh",
+      "country": "England",
+      "asset_group": "marazion_old_telegraph_20240903",
+      "materials": [
+        "porcelain_ceramic"
+      ],
+      "evidence": "a fairly old pole, with ceramic insulators in place",
+      "use": "auxiliary_telegraph_morphology_not_primary_power_evaluation",
+      "record_id": "uk_material_7880016",
+      "title": "Old telegraph pole near the A394 bridge &copy; DS Pugh cc-by-sa/2.0",
+      "photo_page_url": "https://www.geograph.org.uk/photo/7880016",
+      "image_url": "https://s0.geograph.org.uk/geophotos/07/88/00/7880016_966d2c63.jpg",
+      "licence_url": "http://creativecommons.org/licenses/by-sa/2.0/",
+      "licence": "CC BY-SA 2.0",
+      "image_file": "data/external/uk_material_sources_v1/images/uk_material_7880016.jpg",
+      "image_sha256": "1b7a767ad04042f633a5dc271de3839919c085c07655e41e3e78d49bb3a3e004",
+      "source_page_sha256_at_acquisition": "29864282a714f226765e318b544c5f0ae9a133fa48235ddc3577c0d962dd9b9d",
+      "width": 427,
+      "height": 640,
+      "bytes": 119488,
+      "model_inference_performed": false,
+      "material_truth_status": "source_evidenced_candidate_not_box_reviewed"
+    }
+  ],
+  "model_inference_performed": false,
+  "evaluation_status": "candidate_pool_only; freeze compatible boxes and splits before inference",
+  "provenance_rule": "Keep page URL, original image URL, author, licence, page and image hashes, evidence excerpt and asset group."
+}

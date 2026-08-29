@@ -1,0 +1,29 @@
+{
+  "protocol_id": "mpid-material-detector-v1",
+  "run": "runs/mpid_material_detector/v1_20260829",
+  "dataset": "data/external/mpid_material_detector_v1",
+  "source_archives": {
+    "glass_MPID-20250106T113616Z-001.zip": "46595ab05cb5ae42fade45770ae75b7654278e394d70bdfece8bf28baac30601",
+    "porcelain_MPID-20250106T111149Z-001.zip": "5b9be0abe879cbe36ab113ae14f13543e8fd97d490abfcc507fe2dbff5f6f7a2",
+    "composite_MPID-20250106T113900Z-001.zip": "75470139b91d4b60006fb53d63944230d6811818ff8624a0e6cd7a5e67278b61"
+  },
+  "classes": ["glass", "porcelain_ceramic", "polymer_composite"],
+  "split": {
+    "method": "deterministic global origin-filename family split after exact-byte deduplication",
+    "development_fraction": 0.1,
+    "seed": 29,
+    "warning": "MPID does not retain authoritative upstream-source identities. This split prevents known filename-family and exact-byte leakage but cannot prove upstream-source independence."
+  },
+  "pretrained": "weights/yoloe-26m-seg.pt",
+  "pretrained_sha256": "585f5ec9028fd358035da8d860c27c56be285a795cba2076fba536a4391c2c83",
+  "yaml": "yoloe-26m.yaml",
+  "epochs": 2,
+  "imgsz": 640,
+  "batch": 32,
+  "seed": 29,
+  "checkpoint_selection": "fixed final epoch; UK target images and MPID development metrics do not select a checkpoint",
+  "uk_target_manifest": "data/external/uk_material_sources_v1/manifest.json",
+  "uk_target_manifest_sha256": "b27b9d5d43ef323b7755640499337ebe8637883d451c9b675255c93f10a1a2a8",
+  "inference": {"imgsz": 1280, "conf": 0.05, "iou": 0.5, "max_det": 100, "augment": false},
+  "claim_boundary": "Diagnostic direct three-material detector. MPID development metrics are not UK accuracy; UK scores are raw uncalibrated detector scores."
+}

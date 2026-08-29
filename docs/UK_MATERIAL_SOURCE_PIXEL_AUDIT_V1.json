@@ -8,8 +8,11 @@
     {"record_id":"uk_material_3209028","visibility":"high","whole_assembly_annotatable":true,"decision":"eligible_new_grouped_candidate","reason":"One large glass string is clearly resolved; keep in the same split as 3208894."},
     {"record_id":"uk_material_3208894","visibility":"high","whole_assembly_annotatable":true,"decision":"eligible_new_grouped_candidate","reason":"Two parallel porcelain strings are clearly resolved; annotate as separate assemblies and keep with 3209028."},
     {"record_id":"uk_material_3809215","visibility":"low","whole_assembly_annotatable":true,"decision":"eligible_abstention_and_localisation_candidate","reason":"Strings are locatable but dielectric texture is not resolved; a material system should be allowed to abstain."},
+    {"record_id":"uk_material_770248","visibility":"high","whole_assembly_annotatable":true,"decision":"eligible_new_independent_candidate","reason":"Multiple complete glass strings are resolved on a UK transmission tower; source text independently identifies glass insulators."},
+    {"record_id":"uk_material_770272","visibility":"high","whole_assembly_annotatable":true,"decision":"prospective_same_asset_porcelain_freeze","reason":"The right-hand replacement porcelain string is clearly resolved and was boxed before inference on this image; sibling 770248 makes this a within-asset, not independent-asset, diagnostic."},
+    {"record_id":"uk_material_6714446","visibility":"very_low","whole_assembly_annotatable":false,"decision":"eligible_forced_abstention_candidate","reason":"The UK distribution setting is relevant and source text identifies ceramic insulators, but the dielectric bodies occupy too few pixels for a defensible material crop."},
     {"record_id":"uk_material_7880016","visibility":"high","whole_assembly_annotatable":true,"decision":"auxiliary_pin_insulator_candidate","reason":"Ceramic pin units are clear, but the source is an old telegraph/communications pole rather than primary electricity-network evidence."}
   ],
-  "summary":{"records":6,"new_high_visibility_primary_records":2,"new_low_visibility_abstention_records":1,"legacy_records":2,"auxiliary_records":1},
-  "next_gate":"Create complete-assembly boxes and a split freeze only after adding more independent UK groups; do not run material inference on these candidates yet."
+  "summary":{"records":9,"new_high_visibility_primary_records":3,"prospective_same_asset_records":1,"new_low_visibility_abstention_records":2,"legacy_records":2,"auxiliary_records":1},
+  "next_gate":"Use the direct detector only as a proposal arm; add complete-assembly consolidation and a separate material head. Continue acquiring independent UK asset groups before any UK accuracy claim; model output never supplies their truth."
 }
