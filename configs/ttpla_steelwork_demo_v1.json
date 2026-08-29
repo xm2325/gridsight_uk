@@ -1,0 +1,44 @@
+{
+  "id": "ttpla-steelwork-demo-v1-20260829",
+  "dataset_api": "https://datasets-server.huggingface.co/rows",
+  "dataset_id": "grantmwilkinson/epri-transmission-ttpla",
+  "dataset_config": "default",
+  "mirror_page": "https://huggingface.co/datasets/grantmwilkinson/epri-transmission-ttpla",
+  "official_repository": "https://github.com/R3ab/ttpla_dataset",
+  "official_repository_commit": "72ddf48cfee6d25b89fa8063e4dcd44bad08cddb",
+  "paper": "https://openaccess.thecvf.com/content/ACCV2020/html/Abdelfattah_TTPLA_An_Aerial-Image_Dataset_for_Detection_and_Segmentation_of_Transmission_ACCV_2020_paper.html",
+  "paper_evidence": "The paper states that lattice transmission towers are composed of steel angle sections and labels them tower-lattice.",
+  "license": "Apache-2.0 repository license; mirror instructs users to consult original dataset terms before redistribution or commercial use",
+  "license_url": "https://github.com/R3ab/ttpla_dataset/blob/72ddf48cfee6d25b89fa8063e4dcd44bad08cddb/LICENSE",
+  "scope_warning": "tower_lattice is an assembly-level structural-region target for transmission towers. It is not an individual steel member, corrosion mask, or distribution-pole crossarm material label.",
+  "selection": {
+    "order": ["test", "val", "train"],
+    "source_group": "filename prefix before the first underscore",
+    "group_overlap": false,
+    "seed": 29,
+    "counts": {
+      "train": {"positive": 24, "hard_negative": 12},
+      "val": {"positive": 8, "hard_negative": 4},
+      "test": {"positive": 8, "hard_negative": 4}
+    },
+    "positive": "At least one mirror tower_lattice polygon",
+    "hard_negative": "No tower_lattice polygon and at least one tower_wooden or tower_tucohy polygon"
+  },
+  "classes": ["lattice_tower_steel_structure"],
+  "model": {
+    "checkpoint": "weights/yoloe-26m-seg.pt",
+    "checkpoint_sha256": "585f5ec9028fd358035da8d860c27c56be285a795cba2076fba536a4391c2c83",
+    "open_vocabulary_prompt": "steel lattice transmission tower",
+    "training_epochs": 20,
+    "imgsz": 1280,
+    "batch": 8,
+    "seed": 29,
+    "score_threshold": 0.25,
+    "mask_iou_threshold": 0.5,
+    "checkpoint_selection": "final epoch; no test or UK selection"
+  },
+  "budget": "One gputest job, at most 15 minutes, one supervised run plus one frozen open-vocabulary baseline. No automatic extension.",
+  "dataset_output": "data/external/ttpla_steelwork_demo_v1",
+  "manifest_sha256": "f1b21f61b78038a8a86372483a5c4c9f618cec16b116b9f1f37b5bd7744d4c69",
+  "run_output": "runs/ttpla_steelwork/v1_20260829"
+}

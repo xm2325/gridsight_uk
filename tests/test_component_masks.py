@@ -12,6 +12,7 @@ from acquire_uk_material_sources import SOURCES,jpeg_size
 from download_mpid import FILES as MPID_FILES
 from audit_mpid_archives import origin_key
 from sample_mpid_units import choose
+from prepare_ttpla_steelwork_demo import yolo_lines
 
 
 class ComponentMaskTests(unittest.TestCase):
@@ -104,6 +105,39 @@ class ComponentMaskTests(unittest.TestCase):
         self.assertEqual((result['tp'],result['fp'],result['fn']),(1,1,1))
         raw={'mask_shape':np.array([0,10,10]),'mask_bits':np.zeros((0,13),np.uint8)}
         self.assertEqual(decode_masks(raw).shape,(0,10,10))
+
+    def test_ttpla_protocol_keeps_assembly_scope_and_source_groups(self):
+        cfg=json.loads((ROOT/'configs/ttpla_steelwork_demo_v1.json').read_text())
+        self.assertIn('assembly-level',cfg['scope_warning'])
+        self.assertIn('not an individual steel member',cfg['scope_warning'])
+        self.assertFalse(cfg['selection']['group_overlap'])
+        self.assertEqual(cfg['model']['checkpoint_selection'],'final epoch; no test or UK selection')
+        self.assertIn('No automatic extension',cfg['budget'])
+
+    def test_ttpla_boundary_noise_is_recorded_not_silently_clipped(self):
+        row={'row':{'file_name':'sample.jpg','width':100,'height':80,
+                    'annotations':{'category_name':['tower_lattice'],
+                                   'segmentation':[[0,-1.25,100,0,100,80,0,80]]}}}
+        lines,corrections=yolo_lines(row)
+        self.assertEqual(len(lines),1)
+        self.assertEqual(corrections,[{'coordinate_index':1,'raw':-1.25,'clipped':0.0,'axis':'y'}])
+        row['row']['annotations']['segmentation'][0][1]=-2.1
+        with self.assertRaises(ValueError):yolo_lines(row)
+
+    def test_pole_top_protocol_is_geometry_target_not_physical_truth(self):
+        cfg=json.loads((ROOT/'configs/pole_top_keypoint_v1.json').read_text())
+        self.assertIn('publisher masks',cfg['target'])
+        self.assertIn('not an annotated physical tip',cfg['target'])
+        self.assertEqual(cfg['split'],'dev')
+        self.assertIn('No new inference',cfg['model_execution'])
+        result_path=ROOT/'runs/pole_top_keypoint/v1_20260829/results.json'
+        if result_path.exists():
+            result=json.loads(result_path.read_text())
+            self.assertFalse(result['target_is_physical_tip_annotation'])
+            self.assertFalse(result['target_is_model_pseudo_label'])
+            self.assertTrue(result['target_is_publisher_mask_derived'])
+            self.assertEqual(result['summary']['mask_model']['accepted'],10)
+            self.assertEqual(result['summary']['box_model']['accepted'],8)
 
 
 if __name__=='__main__':unittest.main()

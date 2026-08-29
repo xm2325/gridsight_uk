@@ -1,0 +1,19 @@
+{
+  "id": "pole-top-keypoint-v1-20260829",
+  "source_manifest": "data/external/epri_component_masks_v1/manifest.json",
+  "source_manifest_sha256": "224245afb6b00e9e0f816e250e1e1b76f74bb122f5b4856ba02685235a58acd2",
+  "mask_predictions": "runs/component_masks/v1_20260828/inference",
+  "mask_results_sha256": "1a85cbf9fa56adf10b63c91856e36c9a9f9f00e7725e54b9df54f57dc7d336ff",
+  "box_predictions": "runs/keen_components/epri_components_v1_20260827/dev/predictions/supervised",
+  "box_results_sha256": "d5bc2d70c50a23ed483b8c2378b4d8e0e49d264193314c1c9f828d6122d44a07",
+  "split": "dev",
+  "score_threshold": 0.25,
+  "mask_match_iou": 0.5,
+  "eligibility": "Exactly one publisher pole polygon, at least one publisher crossarm polygon, an elongated pole mask, unambiguous crossarm-to-axis-end association, and a non-truncated selected endpoint.",
+  "target": "Visible pole-shaft axis endpoint nearest the publisher crossarm polygon(s), deterministically derived from publisher masks. This is not an annotated physical tip and not an upper-assembly box.",
+  "normalizer": "Square root of publisher pole-mask area in the 1280-long-side working raster.",
+  "metrics": ["coverage", "median_normalized_error", "pck@0.25", "pck@0.50"],
+  "selection": "Protocol frozen before computing model metrics; development split only; no threshold tuning and no UK accuracy claim.",
+  "model_execution": "No new inference. Compares preserved outputs from Roihu jobs 910514 and 921987.",
+  "output": "runs/pole_top_keypoint/v1_20260829"
+}

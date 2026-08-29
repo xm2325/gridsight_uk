@@ -86,12 +86,24 @@ def build():
         r=next(r for r in bundle['images'] if r['image_id']=='uk_geograph_'+ident)
         renderer.annotated_image(out/r['image_file'],r['predictions']['dino_hardware'],bundle['classes'],
             ident+' | METAL STRUCTURE HYPOTHESES | NOT VERIFIED STEEL',score_threshold=.3).save(out/('hardware_'+ident+'.jpg'),quality=93)
+    import build_capability_upgrade_report
+    extensions,extension_verification=build_capability_upgrade_report.build(out)
+    bundle['verified_extensions']={
+        'steelwork':extensions['steelwork']['summary'],
+        'pole_top':extensions['pole_top']['summary'],
+        'material':extensions['material'],
+        'report':'upgrade/index.html',
+        'verification':'upgrade/verification.json'
+    }
+    write_json(out/'data.json',bundle)
+    (out/'index.html').write_text(html.replace('__DATA_JSON__',json.dumps(bundle,ensure_ascii=False,allow_nan=False,separators=(',',':')).replace('<','\\u003c')))
     shutil.copyfile(ROOT/'UK_COMPONENT_ANNOTATION_GUIDE_EN.md',out/'UK_COMPONENT_ANNOTATION_GUIDE.md')
     shutil.copyfile(ROOT/'KEEN_CAPABILITY_DESIGN_EN.md',out/'RESULTS.md')
     verification={'status':'VERIFIED_V3_RAW_TENSORS_CROPS_AND_ENGLISH_UI','source_archive_files_verified':len(archived['files']),
         'images':27,'hardware_raw_prediction_checks':raw_checks,'exact_crop_pixel_checks':crop_checks,'encoded_views':encoded,
         'counts_are_accuracy':False,'training_started':False,'results_sha256':digest(run/'results.json'),
         'template_sha256':digest(template),'builder_sha256':digest(__file__),'html_sha256':digest(out/'index.html'),**bundle['capability_counts']}
+    verification['extension_verification']=extension_verification
     write_json(out/'verification.json',verification);print(json.dumps(verification))
 
 

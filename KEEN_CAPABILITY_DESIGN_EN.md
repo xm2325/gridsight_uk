@@ -80,4 +80,10 @@ After reviewed labels and independent asset splits exist, freeze a small compari
 
 Do not select models by matching the confidence numbers in a marketing screenshot. Acceptance requires new independent UK assets, correct instance units, documented material evidence, retained failure examples and a reproducible runtime measurement. Numerical operating targets must be agreed for the intended inspection use and frozen before evaluation; none has yet been measured or promised here.
 
+## 30 August evidence-lab addendum
+
+Two bounded protocols now make the earlier ambiguity measurable without changing the UK drafts. The EPRI development audit derives a visible pole-shaft endpoint from publisher pole/crossarm polygons and compares preserved box and mask outputs. Mask geometry covers 10/18 eligible targets versus 8/18 for box geometry, with median normalised error 0.048 versus 0.057. Because the target is publisher-mask-derived rather than a physical-tip annotation, the UK `pole-top` output remains an unscored inspection region.
+
+TTPLA supplies a paper-backed `tower-lattice` structural assembly class: the paper states lattice towers are composed of steel angle sections. A group-separated 60-image mirror subset was used for one fixed YOLOE segmentation comparison. On ten fixed test instances, open vocabulary matched 2 and the 20-epoch supervised final checkpoint matched 1 at score 0.25 / mask IoU 0.50; both stayed empty on four hard-negative images. This is a transmission-tower assembly demonstration, not distribution-pole crossarm material evidence. Full evidence and all-image visualisations are documented in `docs/STEELWORK_POLE_TOP_V1.md` and the English 8772 `report/upgrade/index.html` gallery.
+
 The English EPRI explorer is a separate presentation at `runs/keen_components/epri_components_en_20260827/report/index.html`, served on port 8771. It preserves the original data and three class toggles while linking to the current UK review on port 8772. The historical EPRI and v3 archives are unchanged.
