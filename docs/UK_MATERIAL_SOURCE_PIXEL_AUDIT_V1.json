@@ -1,0 +1,15 @@
+{
+  "status": "ASSISTANT_VISUAL_AUDIT",
+  "model_inference_performed": false,
+  "scope": "Original source pixels were reviewed for material visibility and compatible whole-assembly annotation. Source-page text remains the material evidence.",
+  "records": [
+    {"record_id":"uk_material_2952166","visibility":"moderate","whole_assembly_annotatable":true,"decision":"legacy_development_only","reason":"Both material sides are visible but this image was already consumed by adaptive development."},
+    {"record_id":"uk_material_8090535","visibility":"moderate","whole_assembly_annotatable":true,"decision":"legacy_reference_only","reason":"Mixed material circuits are visible but this image was already consumed as a reference."},
+    {"record_id":"uk_material_3209028","visibility":"high","whole_assembly_annotatable":true,"decision":"eligible_new_grouped_candidate","reason":"One large glass string is clearly resolved; keep in the same split as 3208894."},
+    {"record_id":"uk_material_3208894","visibility":"high","whole_assembly_annotatable":true,"decision":"eligible_new_grouped_candidate","reason":"Two parallel porcelain strings are clearly resolved; annotate as separate assemblies and keep with 3209028."},
+    {"record_id":"uk_material_3809215","visibility":"low","whole_assembly_annotatable":true,"decision":"eligible_abstention_and_localisation_candidate","reason":"Strings are locatable but dielectric texture is not resolved; a material system should be allowed to abstain."},
+    {"record_id":"uk_material_7880016","visibility":"high","whole_assembly_annotatable":true,"decision":"auxiliary_pin_insulator_candidate","reason":"Ceramic pin units are clear, but the source is an old telegraph/communications pole rather than primary electricity-network evidence."}
+  ],
+  "summary":{"records":6,"new_high_visibility_primary_records":2,"new_low_visibility_abstention_records":1,"legacy_records":2,"auxiliary_records":1},
+  "next_gate":"Create complete-assembly boxes and a split freeze only after adding more independent UK groups; do not run material inference on these candidates yet."
+}

@@ -1,0 +1,84 @@
+{
+  "protocol_id": "uk-insulator-material-v1",
+  "status": "design_frozen_before_new_data_or_model_inference",
+  "objective": "Locate complete visible insulator assemblies in UK overhead-line images and identify their dielectric material with explicit abstention.",
+  "deployment_domain": "UK overhead distribution and transmission imagery; ground, oblique and UAV views remain separate evaluation strata.",
+  "classes": [
+    {
+      "id": 0,
+      "name": "glass",
+      "definition": "The load-bearing dielectric body is glass. Metal caps, pins and fittings inside the assembly do not change this label."
+    },
+    {
+      "id": 1,
+      "name": "porcelain_ceramic",
+      "display_name": "porcelain / ceramic",
+      "definition": "The load-bearing dielectric body is porcelain or another source-described ceramic. Do not infer porcelain from colour alone."
+    },
+    {
+      "id": 2,
+      "name": "polymer_composite",
+      "display_name": "polymer / composite",
+      "definition": "The load-bearing dielectric body is a source-described polymeric or composite insulator."
+    }
+  ],
+  "abstention_label": "unknown",
+  "abstention_is_trained_material_class": false,
+  "non_insulator_is_separate_from_unknown_material": true,
+  "localisation_unit": {
+    "target": "one physically continuous visible insulator assembly from attachment endpoint to attachment endpoint; for a pin insulator, the complete insulating body and its immediately attached fitting",
+    "include_metal_fittings": "inside the localisation extent when they belong to the same continuous assembly, but exclude them from material semantics",
+    "forbidden_unit_changes": [
+      "individual sheds or discs must not be silently converted into whole-string targets",
+      "multiple parallel strings must not be merged into one target",
+      "unlabelled plausible components must not be invented as reference truth"
+    ],
+    "incompatible_source_policy": "quarantine or retain in a source-specific auxiliary task; never mix incompatible units in the primary detector or metric"
+  },
+  "architecture": {
+    "stage_1": "material-agnostic whole-assembly detector or segmenter",
+    "stage_2": "tight and context crop material classifier",
+    "stage_3": "fixed rejection gate",
+    "existing_yolo26_supervised_role": "localisation baseline only because its glass and polymer source categories were collapsed to one insulator class",
+    "existing_siglip2_head_role": "crop-classification baseline only; its previous automatic result is not promoted"
+  },
+  "rejection_requirements": [
+    "minimum resolved dielectric-body pixels",
+    "tight/context decision agreement",
+    "minimum frozen material margin or calibrated acceptance score",
+    "reject truncated or severely occluded localisation",
+    "reject target-domain outliers under a frozen rule"
+  ],
+  "data_contract": {
+    "candidate_sources": ["MPID", "InsPLAD", "Substation15", "source-evidenced UK public images"],
+    "split_by": ["original dataset", "original source photo", "asset or capture group when available", "near-duplicate component"],
+    "random_image_split_allowed": false,
+    "pseudo_labels_allowed_for_training": true,
+    "pseudo_labels_allowed_as_evaluation_truth": false,
+    "uk_unlabelled_images_allowed_for_adaptation": true,
+    "uk_unlabelled_images_allowed_for_accuracy_claim": false
+  },
+  "required_evaluation_strata": [
+    "material class",
+    "ground versus UAV viewpoint",
+    "complete versus truncated",
+    "resolved dielectric-body size",
+    "pin versus suspension or strain morphology",
+    "source dataset and UK source group"
+  ],
+  "metrics": {
+    "localisation": ["precision", "recall", "AP", "false positives per image"],
+    "oracle_crop_diagnostic": ["accepted coverage", "accuracy among accepted", "confusion matrix"],
+    "end_to_end": ["material-aware precision", "material-aware recall", "unknown rate", "accuracy among accepted"],
+    "iou_thresholds": [0.5],
+    "confidence_policy": "keep localisation and material scores separate until a target-labelled calibration set supports a joint score"
+  },
+  "uk_final_gate": {
+    "freeze_before_inference": true,
+    "independent_source_evidence_required": true,
+    "machine_candidates_are_ground_truth": false,
+    "report_failures_and_abstentions": true,
+    "no_production_claim_from_demo_images": true
+  },
+  "execution": "New model jobs run only on Roihu gputest under project_2012997. Completed experiments are not rerun automatically."
+}
