@@ -92,6 +92,7 @@ def build():
         'steelwork':extensions['steelwork']['summary'],
         'pole_top':extensions['pole_top']['summary'],
         'material':extensions['material'],
+        'localisation_adaptation':extensions['localisation_adaptation_v1'],
         'report':'upgrade/index.html',
         'verification':'upgrade/verification.json'
     }

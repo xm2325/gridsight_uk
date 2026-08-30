@@ -269,5 +269,23 @@ class ComponentMaskTests(unittest.TestCase):
         self.assertEqual(len(report['gallery']),8)
         self.assertIn('Target-domain supervised localisation is required',report['conclusion'])
 
+    def test_uk_adaptation_result_and_report_preserve_prospective_boundary(self):
+        result_path=ROOT/'runs/uk_insulator_adaptation/v1_20260830/results.json'
+        report_path=ROOT/'runs/uk_capabilities/v3_20260827/report/localisation_adaptation/data.json'
+        if not result_path.exists() or not report_path.exists():
+            self.skipTest('Optional UK adaptation output is not in the source release')
+        result=json.loads(result_path.read_text());report=json.loads(report_path.read_text())
+        self.assertEqual(result['status'],'COMPLETE')
+        self.assertFalse(result['integrity']['acceptance_used_for_training_or_checkpoint_selection'])
+        self.assertFalse(result['integrity']['thresholds_selected_from_acceptance_results'])
+        self.assertEqual(result['integrity']['acceptance_inference_passes_per_checkpoint'],1)
+        self.assertFalse(result['integrity']['outputs_are_calibrated_probabilities'])
+        baseline=result['metrics']['baseline_epri_full_plus_tiles']['0.05']['0.3']
+        adapted=result['metrics']['adapted_specialist_full_plus_tiles']['0.05']['0.3']
+        self.assertEqual((baseline['tp'],baseline['fp'],baseline['fn']),(0,1,14))
+        self.assertEqual((adapted['tp'],adapted['fp'],adapted['fn']),(5,3,9))
+        self.assertEqual(len(report['gallery']),5)
+        self.assertIn('not yet Keen-style',report['conclusion'])
+
 
 if __name__=='__main__':unittest.main()
