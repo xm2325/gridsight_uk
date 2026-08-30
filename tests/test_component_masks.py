@@ -17,9 +17,13 @@ from acquire_uk_material_prospective_v1 import SOURCES as PROSPECTIVE_MATERIAL_S
 from roihu_uk_material_prospective_v1 import asset_counts,greedy_matches
 from acquire_uk_insulator_localisation_v1 import SOURCES as LOCALISATION_SOURCES
 from acquire_uk_insulator_localisation_v2 import SOURCES as LOCALISATION_V2_SOURCES
+from acquire_uk_insulator_localisation_v3 import SOURCES as LOCALISATION_V3_SOURCES
 from prepare_uk_insulator_adaptation_v1 import POSITIVES as ADAPTATION_POSITIVES
 from prepare_uk_insulator_adaptation_v1 import NEGATIVES as ADAPTATION_NEGATIVES
 from prepare_uk_insulator_adaptation_v1 import square_crop
+from prepare_uk_insulator_adaptation_v2 import crop_labels as crop_labels_v2
+from prepare_uk_insulator_adaptation_v2 import square_crop as square_crop_v2
+from prepare_uk_insulator_adaptation_v2 import verify_definitions as verify_adaptation_v2
 from roihu_uk_insulator_localisation_v1 import axis_starts,fixed_priority_fusion,match_counts
 
 
@@ -250,6 +254,54 @@ class ComponentMaskTests(unittest.TestCase):
         self.assertEqual(protocol['evaluation']['operating_scores'],[.05,.25])
         self.assertEqual(protocol['evaluation']['evaluation_ious'],[.3,.5])
         self.assertIn('does not replace',protocol['model_role'])
+        self.assertIn('No acceptance-selected retry',protocol['budget'])
+
+    def test_third_uk_acceptance_is_frozen_source_preserved_and_unconsumed(self):
+        accepted=[r for r in LOCALISATION_V3_SOURCES if r['role'] in {'prospective_test','hard_negative'}]
+        excluded=[r for r in LOCALISATION_V3_SOURCES if r['role']=='excluded']
+        self.assertEqual(len(accepted),9)
+        self.assertEqual(sum(len(r['boxes']) for r in accepted),30)
+        self.assertEqual(len({r['asset_group'] for r in accepted}),9)
+        self.assertEqual(sum(r['role']=='hard_negative' for r in accepted),2)
+        self.assertTrue(all(r['exclusion_reason'] for r in excluded))
+        manifest=json.loads((ROOT/'data/external/uk_insulator_localisation_v3/manifest.json').read_text())
+        manifest_accepted=[r for r in manifest['records'] if r['role']!='excluded']
+        self.assertTrue(all(r['author'] and r['photo_page_url'] and r['licence_url'] for r in manifest_accepted))
+        self.assertTrue(all(r['negative_evidence'] for r in manifest_accepted if r['role']=='hard_negative'))
+        self.assertTrue(manifest['selection_frozen_before_v2_adapted_model_inference'])
+        self.assertFalse(manifest['model_inference_performed_before_freeze'])
+        self.assertEqual(manifest['prior_overlap'],{'image_hashes':{},'photo_ids':{},'asset_groups':{}})
+
+    def test_adaptation_v2_definitions_keep_v3_out_and_crops_label_safe(self):
+        sources,groups=verify_adaptation_v2()
+        self.assertEqual((sum(r['split']=='train' for r in sources),len(groups['train'])),(15,13))
+        self.assertEqual((sum(r['split']=='dev' for r in sources),len(groups['dev'])),(9,9))
+        self.assertEqual(sum(len(r['boxes']) for r in sources if r['split']=='train'),60)
+        self.assertEqual(sum(len(r['boxes']) for r in sources if r['split']=='dev'),18)
+        self.assertFalse(groups['train'] & groups['dev'])
+        crop=square_crop_v2([90,40,100,50],100,300,8)
+        self.assertEqual(crop,[0,0,100,100])
+        self.assertTrue(0 <= crop[0] < crop[2] <= 100)
+        self.assertTrue(0 <= crop[1] < crop[3] <= 300)
+        self.assertIsNone(crop_labels_v2([[10,10,30,30]], [20,0,40,40]))
+        self.assertEqual(crop_labels_v2([[10,10,30,30]], [0,0,40,40]),[[10,10,30,30]])
+        development=json.loads((ROOT/'data/external/uk_insulator_development_v2/manifest.json').read_text())
+        acceptance=json.loads((ROOT/'data/external/uk_insulator_localisation_v3/manifest.json').read_text())
+        self.assertEqual(development['v3_acceptance_manifest_sha256'],
+                         'd74f206e506c9c61303cdf20c092c44c107332cc3931ccf0f6a8079e68ac50ac')
+        self.assertFalse(development['v3_acceptance_read_for_training'])
+        self.assertFalse(development['records'][0]['asset_group'] in
+                         {r['asset_group'] for r in acceptance['records'] if r['role']!='excluded'})
+        protocol=json.loads((ROOT/'configs/uk_insulator_adaptation_v2.json').read_text())
+        self.assertEqual(protocol['dataset_manifest_sha256'],
+                         'a61545de5e83f574f1faa459e2c1976c091ab40f7569185a1ad9b745bbdae6ed')
+        self.assertEqual(protocol['acceptance_manifest_sha256'],
+                         'd74f206e506c9c61303cdf20c092c44c107332cc3931ccf0f6a8079e68ac50ac')
+        self.assertEqual(protocol['baseline_checkpoint_sha256'],
+                         '30ecb12f6fa7736af950075a12e5a48cebec25223a0fe71f0a7776a92535ddc7')
+        self.assertEqual(protocol['training']['epochs'],8)
+        self.assertEqual(protocol['evaluation']['operating_scores'],[.05,.25])
+        self.assertEqual(protocol['evaluation']['evaluation_ious'],[.3,.5])
         self.assertIn('No acceptance-selected retry',protocol['budget'])
 
     def test_uk_localisation_result_preserves_failures_and_claim_boundary(self):
