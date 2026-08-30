@@ -16,6 +16,10 @@ from prepare_ttpla_steelwork_demo import yolo_lines
 from acquire_uk_material_prospective_v1 import SOURCES as PROSPECTIVE_MATERIAL_SOURCES
 from roihu_uk_material_prospective_v1 import asset_counts,greedy_matches
 from acquire_uk_insulator_localisation_v1 import SOURCES as LOCALISATION_SOURCES
+from acquire_uk_insulator_localisation_v2 import SOURCES as LOCALISATION_V2_SOURCES
+from prepare_uk_insulator_adaptation_v1 import POSITIVES as ADAPTATION_POSITIVES
+from prepare_uk_insulator_adaptation_v1 import NEGATIVES as ADAPTATION_NEGATIVES
+from prepare_uk_insulator_adaptation_v1 import square_crop
 from roihu_uk_insulator_localisation_v1 import axis_starts,fixed_priority_fusion,match_counts
 
 
@@ -211,6 +215,42 @@ class ComponentMaskTests(unittest.TestCase):
         self.assertEqual([p['source_model'] for p in fused],['epri','mpid'])
         counts=match_counts(fused,[[0,0,10,10],[20,0,30,10]],.3)
         self.assertEqual((counts['tp'],counts['fp'],counts['fn']),(2,0,0))
+
+    def test_second_uk_acceptance_is_frozen_before_adaptation(self):
+        accepted=[r for r in LOCALISATION_V2_SOURCES if r['role'] in {'prospective_test','hard_negative'}]
+        self.assertEqual(len(accepted),5)
+        self.assertEqual(sum(len(r['boxes']) for r in accepted),14)
+        self.assertEqual(len({r['asset_group'] for r in accepted}),5)
+        self.assertEqual(sum(r['role']=='hard_negative' for r in accepted),1)
+        self.assertTrue(all(r['exclusion_reason'] for r in LOCALISATION_V2_SOURCES if r['role']=='excluded'))
+        manifest=json.loads((ROOT/'data/external/uk_insulator_localisation_v2/manifest.json').read_text())
+        self.assertTrue(manifest['selection_frozen_before_adapted_model_inference'])
+        self.assertFalse(manifest['model_inference_performed_before_freeze'])
+        self.assertFalse(manifest['prior_manifest_image_hash_overlap'])
+
+    def test_uk_adaptation_definitions_are_group_disjoint_from_acceptance(self):
+        self.assertEqual(len(ADAPTATION_POSITIVES),7)
+        self.assertEqual(sum(len(v['boxes']) for v in ADAPTATION_POSITIVES.values()),21)
+        self.assertEqual(len(ADAPTATION_NEGATIVES),3)
+        train={k for k,v in ADAPTATION_POSITIVES.items() if v['split']=='train'} | {
+            k for k,v in ADAPTATION_NEGATIVES.items() if v=='train'}
+        dev={k for k,v in ADAPTATION_POSITIVES.items() if v['split']=='dev'} | {
+            k for k,v in ADAPTATION_NEGATIVES.items() if v=='dev'}
+        self.assertFalse(train & dev)
+        pilot=json.loads((ROOT/'data/external/uk_distribution_pilot_v1/manifest.json').read_text())
+        by_id={r['geograph_id']:r for r in pilot['images']}
+        adaptation_hashes={by_id[key]['sha256'] for key in train|dev}
+        acceptance=json.loads((ROOT/'data/external/uk_insulator_localisation_v2/manifest.json').read_text())
+        acceptance_hashes={r['image_sha256'] for r in acceptance['records'] if r['role']!='excluded'}
+        self.assertFalse(adaptation_hashes & acceptance_hashes)
+        self.assertEqual(square_crop([[90,90,100,100]],100,100,1.5),[0,0,100,100])
+        self.assertEqual(square_crop([[10,20,20,30]],200,100,1.5),[0,0,200,100])
+        protocol=json.loads((ROOT/'configs/uk_insulator_adaptation_v1.json').read_text())
+        self.assertEqual(protocol['training']['epochs'],10)
+        self.assertEqual(protocol['evaluation']['operating_scores'],[.05,.25])
+        self.assertEqual(protocol['evaluation']['evaluation_ious'],[.3,.5])
+        self.assertIn('does not replace',protocol['model_role'])
+        self.assertIn('No acceptance-selected retry',protocol['budget'])
 
     def test_uk_localisation_result_preserves_failures_and_claim_boundary(self):
         result_path=ROOT/'runs/uk_insulator_localisation/v1_20260830/results.json'
