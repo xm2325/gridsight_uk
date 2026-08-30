@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 from pathlib import Path
 import sys
 import tempfile
@@ -26,6 +27,7 @@ from prepare_uk_insulator_adaptation_v2 import square_crop as square_crop_v2
 from prepare_uk_insulator_adaptation_v2 import verify_definitions as verify_adaptation_v2
 from roihu_uk_multicomponent_inference_v1 import box_pole_top_region
 from build_uk_multicomponent_report_v1 import render_panel as render_multicomponent_panel
+from build_uk_multicomponent_report_v1 import validate_record_contract
 from roihu_uk_insulator_localisation_v1 import axis_starts,fixed_priority_fusion,match_counts
 
 
@@ -422,6 +424,73 @@ class ComponentMaskTests(unittest.TestCase):
         self.assertIn('steelwork candidate',source)
         self.assertIn('pole-top search region · unscored',source)
         self.assertNotIn("{prediction['raw_score']:.0%}",source)
+
+    def test_multicomponent_report_rejects_truth_probability_and_count_promotion(self):
+        record={
+            'schema':'gridsight-uk-multicomponent-v1',
+            'source':{'record_id':'uk-a','photo_page_url':'https://example.org/photo',
+                      'licence_url':'https://example.org/licence'},
+            'components':{
+                'pole':[{'class_name':'pole','xyxy':[45,20,60,180],'raw_score':.71,
+                         'calibrated_probability':False,'reference_truth':False}],
+                'crossarm':[{'class_name':'crossarm','xyxy':[20,25,90,45],'raw_score':.62,
+                             'calibrated_probability':False,'reference_truth':False}],
+                'insulator':[{'source_class_name':'insulator','xyxy':[25,45,40,70],
+                              'raw_score':.31,'calibrated_probability':False,
+                              'reference_truth':False}],
+            },
+            'raw_component_predictions':[{'class_name':'pole','raw_score':.02,
+                                          'calibrated_probability':False,
+                                          'reference_truth':False}],
+            'material':[{'insulator_prediction_index':0,
+                         'diagnostic_material':'porcelain_ceramic',
+                         'diagnostic_decision':{'material':'porcelain_ceramic',
+                                                'material_verified':False,
+                                                'scores_are_probabilities':False},
+                         'final_material':'unknown','material_verified':False,
+                         'scores_are_probabilities':False}],
+            'steelwork_candidates':[{'box':[20,25,90,45],'score':.22,
+                                         'label':'steelwork candidate',
+                                         'steel_composition_verified':False,
+                                         'calibrated_probability':False,
+                                         'reference_truth':False}],
+            'raw_steelwork_candidates':[{'box':[20,25,90,45],'score':.02,
+                                             'label':'steelwork candidate',
+                                             'steel_composition_verified':False,
+                                             'calibrated_probability':False,
+                                             'reference_truth':False}],
+            'pole_top':{'status':'geometry_candidate','xyxy':[38,15,68,45],
+                        'score':None,'derived':True,
+                        'physical_component_verified':False},
+            'v3_reference_boxes_accessed_or_used':False,
+            'v3_role_written_to_output':False,'performance_metrics':None,
+        }
+        result_record={'record_id':'uk-a','counts':{'pole':1,'crossarm':1,'insulator':1,
+                       'material_diagnostics':1,'steelwork_candidates':1,'pole_top_regions':1}}
+        self.assertEqual(validate_record_contract(result_record,record),result_record['counts'])
+        mutations=(
+            lambda row: row['material'][0].update(final_material='porcelain_ceramic'),
+            lambda row: row['material'][0].update(scores_are_probabilities=True),
+            lambda row: row['steelwork_candidates'][0].update(steel_composition_verified=True),
+            lambda row: row['steelwork_candidates'][0].update(reference_truth=True),
+            lambda row: row['pole_top'].update(score=.8),
+            lambda row: row['components']['pole'][0].update(calibrated_probability=True),
+            lambda row: row['raw_component_predictions'][0].update(reference_truth=True),
+            lambda row: row['raw_steelwork_candidates'][0].update(calibrated_probability=True),
+            lambda row: row['source'].update(photo_page_url='javascript:alert(1)'),
+        )
+        for mutate in mutations:
+            changed=deepcopy(record);mutate(changed)
+            with self.assertRaises(ValueError):validate_record_contract(result_record,changed)
+        changed=deepcopy(result_record);changed['counts']['steelwork_candidates']=2
+        with self.assertRaisesRegex(ValueError,'totals'):
+            validate_record_contract(changed,record)
+
+    def test_multicomponent_report_uses_dom_nodes_for_source_metadata(self):
+        source=(ROOT/'scripts/build_uk_multicomponent_report_v1.py').read_text()
+        self.assertNotIn('.innerHTML',source)
+        self.assertIn('meta.replaceChildren',source)
+        self.assertIn('result["protocol"] != protocol',source)
 
 
 if __name__=='__main__':unittest.main()
