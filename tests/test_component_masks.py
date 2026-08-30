@@ -13,6 +13,8 @@ from download_mpid import FILES as MPID_FILES
 from audit_mpid_archives import origin_key
 from sample_mpid_units import choose
 from prepare_ttpla_steelwork_demo import yolo_lines
+from acquire_uk_material_prospective_v1 import SOURCES as PROSPECTIVE_MATERIAL_SOURCES
+from roihu_uk_material_prospective_v1 import asset_counts,greedy_matches
 
 
 class ComponentMaskTests(unittest.TestCase):
@@ -138,6 +140,53 @@ class ComponentMaskTests(unittest.TestCase):
             self.assertTrue(result['target_is_publisher_mask_derived'])
             self.assertEqual(result['summary']['mask_model']['accepted'],10)
             self.assertEqual(result['summary']['box_model']['accepted'],8)
+
+    def test_uk_material_prospective_split_is_asset_disjoint_and_predeclared(self):
+        adaptation={r['asset_group'] for r in PROSPECTIVE_MATERIAL_SOURCES if r['role']=='adaptation'}
+        test={r['asset_group'] for r in PROSPECTIVE_MATERIAL_SOURCES if r['role']=='prospective_test'}
+        self.assertEqual(len(adaptation),3)
+        self.assertEqual(len(test),5)
+        self.assertFalse(adaptation & test)
+        self.assertEqual(sum(len(r['regions']) for r in PROSPECTIVE_MATERIAL_SOURCES if r['role']=='prospective_test'),18)
+        self.assertFalse(any(r['material']=='polymer_composite' for r in PROSPECTIVE_MATERIAL_SOURCES))
+        self.assertTrue(all(r['exclusion_reason'] for r in PROSPECTIVE_MATERIAL_SOURCES if r['role']=='excluded'))
+
+    def test_prospective_region_matching_is_one_to_one(self):
+        refs=[{'xyxy':[0,0,10,10]},{'xyxy':[20,0,30,10]}]
+        predictions=[{'box':[0,0,10,10]},{'box':[1,0,11,10]},{'box':[20,0,30,10]}]
+        matches=greedy_matches(refs,predictions,.3)
+        self.assertEqual([(m['reference_index'],m['prediction_index']) for m in matches],[(1,2),(0,0)])
+
+    def test_asset_decision_requires_consistent_accepted_regions(self):
+        rows=[{'record_id':'a','expected_material':'glass','decision':{'material':'glass'}},
+              {'record_id':'a','expected_material':'glass','decision':{'material':'unknown'}},
+              {'record_id':'b','expected_material':'porcelain_ceramic','decision':{'material':'glass'}},
+              {'record_id':'b','expected_material':'porcelain_ceramic','decision':{'material':'porcelain_ceramic'}}]
+        result=asset_counts(rows)
+        self.assertEqual(result['targets'],2)
+        self.assertEqual(result['accepted'],1)
+        self.assertEqual(result['correct_accepted'],1)
+
+    def test_prospective_result_and_report_keep_claim_boundaries(self):
+        result_path=ROOT/'runs/material_head/v3_uk_prospective_20260830/results.json'
+        report_path=ROOT/'runs/uk_capabilities/v3_20260827/report/material_prospective/data.json'
+        if not result_path.exists() or not report_path.exists():
+            self.skipTest('Optional prospective Roihu output is not in the source release')
+        result=json.loads(result_path.read_text())
+        report=json.loads(report_path.read_text())
+        self.assertEqual(result['status'],'COMPLETE')
+        self.assertFalse(result['test_used_for_training_or_selection'])
+        self.assertEqual(result['encoder_gradient_steps'],0)
+        self.assertEqual(result['head_gradient_steps'],120)
+        adapted=result['oracle_diagnostics']['adapted']['regions']
+        self.assertEqual((adapted['correct_accepted_material_targets'],adapted['accepted_material_targets']),(12,14))
+        self.assertEqual(result['localisation_diagnostics']['matched_regions'],1)
+        self.assertFalse(result['localisation_diagnostics']['reference_regions_are_expert_ground_truth'])
+        self.assertFalse(result['outputs_are_probabilities'])
+        self.assertFalse(result['deployment_claim'])
+        self.assertEqual(len(report['gallery']),5)
+        self.assertFalse(report['reference_regions_are_expert_ground_truth'])
+        self.assertFalse(report['uk_population_accuracy_claim'])
 
 
 if __name__=='__main__':unittest.main()

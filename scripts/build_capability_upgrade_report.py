@@ -11,7 +11,7 @@ from prepare_keen_components import ROOT, digest, write_json
 POLE_RESULT_SHA = "244481031133e857bde18a35d66e23dc0b7c61886a200c914acf85a83b91d10d"
 STEEL_RESULT_SHA = "f327f40f01d8f432c902878e9548e942bea6b9486829497f48bc609f7640ef39"
 STEEL_MANIFEST_SHA = "f1b21f61b78038a8a86372483a5c4c9f618cec16b116b9f1f37b5bd7744d4c69"
-MATERIAL_RESULT_SHA = "fee752551e68ae15b47e59371b87ca301efe9bd919d0f01e3a152f8926db1520"
+MATERIAL_RESULT_SHA = "f959a8a7ea8e1b6f476567b8a01833e88249ab50e8358a3becc605d56c10b6f5"
 
 
 def load(path):
@@ -179,10 +179,12 @@ def build_pole_top(out):
 
 
 def load_material_result():
-    path = ROOT / "runs/material_head/v2_mpid_substation_20260829/results.json"
+    path = ROOT / "runs/material_head/v3_uk_prospective_20260830/results.json"
     assert digest(path) == MATERIAL_RESULT_SHA
     result = load(path)
-    diagnostics = result["uk_diagnostics"]
+    assert result["status"] == "COMPLETE"
+    assert result["test_used_for_training_or_selection"] is False
+    diagnostics = result["oracle_diagnostics"]["adapted"]["regions"]
     required = {
         "material_targets", "accepted_material_targets",
         "correct_accepted_material_targets", "coverage", "accepted_accuracy",
@@ -194,7 +196,9 @@ def load_material_result():
     assert total > 0 and 0 <= correct <= accepted <= total
     assert abs(diagnostics["coverage"] - accepted / total) < 1e-12
     assert abs(diagnostics["accepted_accuracy"] - correct / accepted) < 1e-12
-    return diagnostics
+    localisation = result["localisation_diagnostics"]
+    assert localisation["reference_regions"] == total
+    return diagnostics, localisation
 
 
 def html(data):
@@ -202,21 +206,24 @@ def html(data):
     page = """<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GridSight · Verified capability upgrade</title>
 <style>:root{--ink:#172c43;--muted:#62758a;--line:#d9e3ec;--bg:#eef3f7;--navy:#102238}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}header{background:var(--navy);color:white;padding:24px}header p{margin:6px 0;color:#c7d6e6}.wrap{max-width:1440px;margin:auto;padding:20px}.panel{background:white;border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.card{border:1px solid var(--line);border-radius:10px;padding:14px}.card strong{display:block;font-size:25px}.muted,small{color:var(--muted)}.warning{background:#fff3db;border-color:#e7ca8b}.viewer img{width:100%;max-height:680px;object-fit:contain;background:#0b1625;border-radius:8px}.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}button,select{font:inherit;padding:8px 11px;border:1px solid #c5d3df;border-radius:7px;background:white;color:var(--ink)}select{min-width:320px;max-width:100%}.legend{display:flex;gap:16px;flex-wrap:wrap}.dot{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px}table{border-collapse:collapse;width:100%}th,td{text-align:left;border-bottom:1px solid var(--line);padding:8px}a{color:#1e64bd}code{background:#edf2f6;padding:2px 5px;border-radius:4px}@media(max-width:800px){.cards{grid-template-columns:1fr}.wrap{padding:12px}select{min-width:0;width:100%}}</style></head><body>
 <header><h1>Verified capability upgrade</h1><p>Evidence-backed limits for UK material transfer, lattice steel-structure segmentation and pole-shaft endpoint geometry</p></header><main class="wrap">
-<section class="panel warning"><strong>This is not yet the supplied Keen AI result.</strong><p>The page keeps deployment gaps visible. Material remains <code>unknown</code> on UK targets, TTPLA steel structure is a transmission-tower assembly task, and the pole-top benchmark is a publisher-mask-derived shaft endpoint rather than a physical component detector.</p><a href="../index.html">← UK review workbench</a> · <a href="http://127.0.0.1:8771/report/index.html">EPRI component explorer ↗</a></section>
-<section class="cards"><div class="card"><small>UK material v2</small><strong>__MAT_ACC__</strong><p>Accepted accuracy on __MAT_ACCEPTED__/__MAT_TOTAL__ previously observed UK boxes; __MAT_COVERAGE__ coverage. Not deployable. Return unknown.</p></div><div class="card"><small>Lattice steel structure · fixed test</small><strong>__STEEL_TP__ / __STEEL_TOTAL__</strong><p>Supervised matched instances; open vocabulary matched __OPEN_TP__/__STEEL_TOTAL__. Both had zero detections on __STEEL_NEG__ hard-negative images at score 0.25.</p></div><div class="card"><small>Pole-shaft endpoint · development</small><strong>__POLE_ACCEPTED__ / __POLE_ELIGIBLE__</strong><p>Mask geometry coverage versus __BOX_ACCEPTED__/__POLE_ELIGIBLE__ for box geometry. Accepted mask outputs had median normalised error __POLE_MEDIAN__.</p></div></section>
+<section class="panel warning"><strong>This is not yet the supplied Keen AI result.</strong><p>The page keeps deployment gaps visible. UK material transfer now works on many source-assisted oracle regions, but the full-image detector matched only __LOC_MATCHED__/__MAT_TOTAL__. TTPLA steel structure is a transmission-tower assembly task, and the pole-top benchmark is a publisher-mask-derived shaft endpoint rather than a physical component detector.</p><a href="../index.html">← UK review workbench</a> · <a href="../material_prospective/index.html">UK material prospective audit →</a> · <a href="http://127.0.0.1:8771/report/index.html">EPRI component explorer ↗</a></section>
+<section class="cards"><div class="card"><small>UK material · prospective oracle regions</small><strong>__MAT_CORRECT__ / __MAT_ACCEPTED__</strong><p>__MAT_ACC__ accepted accuracy at __MAT_COVERAGE__ coverage across __MAT_TOTAL__ source-assisted regions. Full-image localisation matched __LOC_MATCHED__/__MAT_TOTAL__. <a href="../material_prospective/index.html">Inspect all five assets</a>.</p></div><div class="card"><small>Lattice steel structure · fixed test</small><strong>__STEEL_TP__ / __STEEL_TOTAL__</strong><p>Supervised matched instances; open vocabulary matched __OPEN_TP__/__STEEL_TOTAL__. Both had zero detections on __STEEL_NEG__ hard-negative images at score 0.25.</p></div><div class="card"><small>Pole-shaft endpoint · development</small><strong>__POLE_ACCEPTED__ / __POLE_ELIGIBLE__</strong><p>Mask geometry coverage versus __BOX_ACCEPTED__/__POLE_ELIGIBLE__ for box geometry. Accepted mask outputs had median normalised error __POLE_MEDIAN__.</p></div></section>
 <section class="panel"><h2>Steel-structure segmentation: all 12 fixed test images</h2><p class="muted">Left: open vocabulary. Right: supervised. Cyan shows the publisher <code>tower_lattice</code> extent; green is a matched mask and red is an unmatched output. Missing output remains a visible miss. These model scores are operating scores, not material probabilities.</p><div class="legend"><span><i class="dot" style="background:#2ad0dc"></i>publisher structure</span><span><i class="dot" style="background:#23ce89"></i>matched model mask</span><span><i class="dot" style="background:#ef585e"></i>unmatched model mask</span></div><div class="toolbar"><button id="steelPrev">← Previous</button><select id="steelSelect"></select><button id="steelNext">Next →</button><span id="steelCounter"></span></div><div class="viewer"><img id="steelImage" alt="TTPLA steel-structure model comparison"></div><p id="steelCaption"></p><p><a href="../../../../ttpla_steelwork/v1_20260829/results.json">Raw result record</a> · <a href="https://github.com/R3ab/ttpla_dataset" target="_blank" rel="noopener">Official TTPLA repository</a> · <a href="https://huggingface.co/datasets/grantmwilkinson/epri-transmission-ttpla" target="_blank" rel="noopener">Mirror provenance</a></p></section>
 <section class="panel"><h2>Pole-shaft endpoint geometry: all 18 eligible development targets</h2><p class="muted">The cyan target is deterministically derived from publisher pole and crossarm polygons. It is not an independently annotated physical pole tip. Green is the mask-model endpoint; orange is the box-model endpoint. Absence means the method abstained.</p><div class="toolbar"><button id="polePrev">← Previous</button><select id="poleSelect"></select><button id="poleNext">Next →</button><span id="poleCounter"></span></div><div class="viewer"><img id="poleImage" alt="Pole endpoint geometry comparison"></div><p id="poleCaption"></p><p><a href="../../../../pole_top_keypoint/v1_20260829/results.json">Raw geometry audit</a></p></section>
-<section class="panel"><h2>What moves the demo toward Keen AI</h2><table><thead><tr><th>Layer</th><th>Now</th><th>Required next evidence</th></tr></thead><tbody><tr><td>Component localisation</td><td>pole / crossarm / insulator masks on EPRI; sparse UK transfer</td><td>Asset-grouped UK component labels and an untouched UK acceptance set</td></tr><tr><td>Insulator material</td><td>Academic adaptation fails on UK porcelain/glass separation</td><td>Independent UK glass, porcelain and polymer assemblies; encoder-level adaptation with abstention calibration</td></tr><tr><td>Steelwork</td><td>TTPLA lattice assembly mask only</td><td>Distribution-pole structural-member or connected-assembly labels with material evidence</td></tr><tr><td>Pole-top</td><td>Scored shaft-end geometry benchmark; current UK window remains unscored</td><td>Choose and label either physical shaft-tip keypoints or upper-assembly extents on UK assets</td></tr><tr><td>Presentation</td><td>Evidence-separated review overlays</td><td>Only show Keen-style percentages after target-domain calibration; keep unknown and rejected states</td></tr></tbody></table></section>
+<section class="panel"><h2>What moves the demo toward Keen AI</h2><table><thead><tr><th>Layer</th><th>Now</th><th>Required next evidence</th></tr></thead><tbody><tr><td>Component localisation</td><td>pole / crossarm / insulator masks on EPRI; prospective UK insulator coverage is only __LOC_COVERAGE__</td><td>Asset-grouped UK component labels, small-object tiling/context adaptation and an untouched UK acceptance set</td></tr><tr><td>Insulator material</td><td>Adapted oracle crops reach __MAT_ACC__ accepted accuracy at __MAT_COVERAGE__ coverage on 18 source-assisted regions</td><td>Independent UK polymer evidence, a larger untouched test and target-domain calibration; preserve unknown</td></tr><tr><td>Steelwork</td><td>TTPLA lattice assembly mask only</td><td>Distribution-pole structural-member or connected-assembly labels with material evidence</td></tr><tr><td>Pole-top</td><td>Scored shaft-end geometry benchmark; current UK window remains unscored</td><td>Choose and label either physical shaft-tip keypoints or upper-assembly extents on UK assets</td></tr><tr><td>Presentation</td><td>Evidence-separated review overlays</td><td>Only show Keen-style percentages after target-domain calibration; keep unknown and rejected states</td></tr></tbody></table></section>
 <footer class="muted">All source hashes, raw predictions, misses, exclusions and frozen boundaries are retained. No UK steelwork or pole-top accuracy is claimed. · <a href="verification.json">Build verification</a> · <a href="ui_qa.json">Browser QA</a></footer></main>
 <script id="payload" type="application/json">""" + payload + """</script><script>'use strict';const D=JSON.parse(document.getElementById('payload').textContent);function setup(prefix,rows,caption){let i=0,s=document.getElementById(prefix+'Select'),img=document.getElementById(prefix+'Image'),count=document.getElementById(prefix+'Counter'),cap=document.getElementById(prefix+'Caption');rows.forEach((r,j)=>{let o=document.createElement('option');o.value=j;o.textContent=r.image_id+(r.file_name?' · '+r.file_name:'');s.append(o)});function show(n){i=(n+rows.length)%rows.length;let r=rows[i];s.value=i;img.src=r.image;count.textContent=(i+1)+' / '+rows.length;cap.textContent=caption(r)}document.getElementById(prefix+'Prev').onclick=()=>show(i-1);document.getElementById(prefix+'Next').onclick=()=>show(i+1);s.onchange=()=>show(Number(s.value));show(0)}setup('steel',D.steelwork.gallery,r=>r.selection_kind+' · publisher instances '+r.reference_count+' · open TP/FP/FN '+r.open_vocabulary.tp+'/'+r.open_vocabulary.fp+'/'+r.open_vocabulary.fn+' · supervised '+r.supervised.tp+'/'+r.supervised.fp+'/'+r.supervised.fn);setup('pole',D.pole_top.gallery,r=>'mask '+r.mask_model.status+(r.mask_model.normalized_error!==undefined?' · normalised error '+r.mask_model.normalized_error.toFixed(3):'')+' · box '+r.box_model.status+(r.box_model.normalized_error!==undefined?' · normalised error '+r.box_model.normalized_error.toFixed(3):''));</script></body></html>"""
     material = data["material"]
     steel = data["steelwork"]["summary"]
     pole = data["pole_top"]["summary"]
     steel_total = steel["supervised"]["tp"] + steel["supervised"]["fn"]
-    return (page.replace("__MAT_ACC__", f'{material["uk_v2_accepted_accuracy"]:.1%}')
+    return (page.replace("__MAT_ACC__", f'{material["accepted_accuracy"]:.1%}')
                 .replace("__MAT_ACCEPTED__", str(material["accepted_targets"]))
+                .replace("__MAT_CORRECT__", str(material["correct_accepted_targets"]))
                 .replace("__MAT_TOTAL__", str(material["material_targets"]))
-                .replace("__MAT_COVERAGE__", f'{material["uk_v2_coverage"]:.1%}')
+                .replace("__MAT_COVERAGE__", f'{material["coverage"]:.1%}')
+                .replace("__LOC_MATCHED__", str(material["localisation_matched"]))
+                .replace("__LOC_COVERAGE__", f'{material["localisation_coverage"]:.1%}')
                 .replace("__STEEL_TP__", str(steel["supervised"]["tp"]))
                 .replace("__OPEN_TP__", str(steel["open_vocabulary"]["tp"]))
                 .replace("__STEEL_TOTAL__", str(steel_total))
@@ -232,7 +239,7 @@ def build(report_root):
     out.mkdir(parents=True, exist_ok=True)
     steel_summary, steel_gallery = build_steel(out)
     pole_summary, pole_gallery, pole_excluded = build_pole_top(out)
-    material_diagnostics = load_material_result()
+    material_diagnostics, localisation = load_material_result()
     data = {
         "status": "VERIFIED_CAPABILITY_UPGRADE_PRESENTATION",
         "language": "English", "uk_accuracy_claim": False,
@@ -240,11 +247,14 @@ def build(report_root):
                       "scope": "TTPLA lattice transmission-tower structural assembly only"},
         "pole_top": {"summary": pole_summary, "gallery": pole_gallery, "excluded": pole_excluded,
                      "scope": "publisher-mask-derived visible shaft endpoint; not physical tip"},
-        "material": {"uk_v2_accepted_accuracy": material_diagnostics["accepted_accuracy"],
-                     "uk_v2_coverage": material_diagnostics["coverage"],
+        "material": {"accepted_accuracy": material_diagnostics["accepted_accuracy"],
+                     "coverage": material_diagnostics["coverage"],
                      "material_targets": material_diagnostics["material_targets"],
                      "accepted_targets": material_diagnostics["accepted_material_targets"],
                      "correct_accepted_targets": material_diagnostics["correct_accepted_material_targets"],
+                     "localisation_matched": localisation["matched_regions"],
+                     "localisation_coverage": localisation["region_coverage"],
+                     "reference_regions_are_expert_ground_truth": False,
                      "deployment": False, "output_policy": "unknown"},
         "raw_results": {"steelwork_sha256": STEEL_RESULT_SHA, "pole_top_sha256": POLE_RESULT_SHA,
                         "steel_manifest_sha256": STEEL_MANIFEST_SHA,
