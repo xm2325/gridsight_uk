@@ -25,6 +25,7 @@ from prepare_uk_insulator_adaptation_v2 import crop_labels as crop_labels_v2
 from prepare_uk_insulator_adaptation_v2 import square_crop as square_crop_v2
 from prepare_uk_insulator_adaptation_v2 import verify_definitions as verify_adaptation_v2
 from roihu_uk_multicomponent_inference_v1 import box_pole_top_region
+from build_uk_multicomponent_report_v1 import render_panel as render_multicomponent_panel
 from roihu_uk_insulator_localisation_v1 import axis_starts,fixed_priority_fusion,match_counts
 
 
@@ -396,6 +397,31 @@ class ComponentMaskTests(unittest.TestCase):
         self.assertTrue(0 <= result['xyxy'][1] < result['xyxy'][3] <= 400)
         self.assertEqual(box_pole_top_region([{'xyxy':[90,40,110,300]}],[],400,400)['status'],'unknown')
         self.assertEqual(box_pole_top_region([{'xyxy':[50,50,160,140]}],[crossarm],400,400)['status'],'unknown')
+
+    def test_multicomponent_renderer_labels_candidates_and_unknown_without_percentages(self):
+        from PIL import Image
+        record={
+            'components':{
+                'pole':[{'xyxy':[45,20,60,180],'raw_score':.71}],
+                'crossarm':[{'xyxy':[20,25,90,45],'raw_score':.62}],
+                'insulator':[{'xyxy':[25,45,40,70],'raw_score':.31}],
+            },
+            'material':[{'insulator_prediction_index':0,'diagnostic_material':'porcelain_ceramic'}],
+            'steelwork_candidates':[{'box':[20,25,90,45],'score':.22}],
+            'pole_top':{'status':'geometry_candidate','xyxy':[38,15,68,45]},
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory)
+            for panel in ('components','material','structure','combined'):
+                target=root/f'{panel}.jpg'
+                render_multicomponent_panel(Image.new('RGB',(200,200),'white'),record,panel,target)
+                self.assertTrue(target.is_file())
+                with Image.open(target) as rendered:self.assertEqual(rendered.size,(200,200))
+        source=(ROOT/'scripts/build_uk_multicomponent_report_v1.py').read_text()
+        self.assertIn('Material remains unknown',source)
+        self.assertIn('steelwork candidate',source)
+        self.assertIn('pole-top search region · unscored',source)
+        self.assertNotIn("{prediction['raw_score']:.0%}",source)
 
 
 if __name__=='__main__':unittest.main()
