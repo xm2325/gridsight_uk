@@ -149,9 +149,14 @@ def main(config_name):
     for path in (cfg_path, Path(__file__), ROOT/"scripts/uk_insulator_localisation_v1.sbatch",
                  ROOT/"scripts/acquire_uk_insulator_localisation_v1.py"):
         shutil.copy2(path, out/"code"/path.name)
+    code_hashes = {path.name: sha(out/"code"/path.name)
+                   for path in (cfg_path, Path(__file__), ROOT/"scripts/uk_insulator_localisation_v1.sbatch",
+                                ROOT/"scripts/acquire_uk_insulator_localisation_v1.py")}
     result = {
         "status": "RUNNING", "created_at": datetime.now(timezone.utc).isoformat(),
-        "git_commit": os.popen(f"git -C {ROOT} rev-parse HEAD").read().strip(),
+        "git_commit": (os.environ.get("GRIDSIGHT_SUBMISSION_COMMIT") or
+                       os.popen(f"git -C {ROOT} rev-parse HEAD").read().strip()),
+        "code_snapshot_sha256": code_hashes,
         "protocol": cfg, "protocol_sha256": sha(cfg_path), "source_manifest_sha256": sha(manifest_path),
         "runtime": {"python": platform.python_version(), "torch": torch.__version__,
                     "cuda": torch.version.cuda, "ultralytics": ultralytics.__version__,
