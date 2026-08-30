@@ -273,6 +273,10 @@ def build(result_sha256, output=DEFAULT_OUT):
     gallery, totals = [], {name: 0 for name in
                            ("pole", "crossarm", "insulator", "material_diagnostics",
                             "steelwork_candidates", "pole_top_regions")}
+    images_with = {name: 0 for name in ("pole", "crossarm", "insulator", "steelwork")}
+    images_with_pole_and_crossarm = 0
+    diagnostic_specific_materials = 0
+    final_specific_materials = 0
     for result_record in result["records"]:
         record_path = RUN / result_record["record_file"]
         if digest(record_path) != result_record["record_sha256"]:
@@ -304,6 +308,15 @@ def build(result_sha256, output=DEFAULT_OUT):
         shutil.copyfile(record_path, raw_target)
         for key, value in result_record["counts"].items():
             totals[key] += value
+        for name in ("pole", "crossarm", "insulator"):
+            images_with[name] += int(bool(record["components"][name]))
+        images_with["steelwork"] += int(bool(record["steelwork_candidates"]))
+        images_with_pole_and_crossarm += int(
+            bool(record["components"]["pole"] and record["components"]["crossarm"]))
+        diagnostic_specific_materials += sum(
+            row["diagnostic_material"] != "unknown" for row in record["material"])
+        final_specific_materials += sum(
+            row["final_material"] != "unknown" for row in record["material"])
         gallery.append({"record_id": source["record_id"], "photo_id": source["photo_id"],
                         "title": html.unescape(source["title"]), "author": source["author"],
                         "photo_page_url": source["photo_page_url"], "licence": source["licence"],
@@ -312,9 +325,21 @@ def build(result_sha256, output=DEFAULT_OUT):
                         "raw_record": str(raw_target.relative_to(output)),
                         "pole_top_status": record["pole_top"]["status"]})
     shutil.copyfile(result_path, output / "raw" / "results.json.txt")
+    output_audit = {
+        "scope": "Observed output coverage, not accuracy",
+        "images": 9,
+        "images_with": images_with,
+        "images_with_pole_and_crossarm": images_with_pole_and_crossarm,
+        "pole_top_abstentions": 9 - totals["pole_top_regions"],
+        "diagnostic_specific_materials": diagnostic_specific_materials,
+        "final_specific_materials": final_specific_materials,
+        "steelwork_candidates": totals["steelwork_candidates"],
+        "steelwork_verified": 0,
+    }
     data = {"status": result["status"], "language": "English", "result_sha256": result_sha256,
             "job_id": result["runtime"]["job_id"], "git_commit": result["git_commit"],
             "gallery": gallery, "totals": totals, "performance_metrics": None,
+            "output_audit": output_audit,
             "claim_boundary": result["claim_boundary"], "integrity": integrity,
             "conclusion": "This page visualises real model outputs and explicit abstentions. It does not establish multi-component accuracy, verified material, steel composition or physical pole-top detection."}
     write_json(output / "data.json", data)
@@ -326,6 +351,7 @@ def build(result_sha256, output=DEFAULT_OUT):
 <div>GridSight-UK · real-output evidence lab</div><h1>UK multi-component overlay</h1><p>Nine source-preserved UK images. Detector values are raw operating scores, not probabilities.</p>
 <div class="warning"><b>This is a review overlay, not Keen-level validation.</b> Material remains unknown without independent instance evidence. Steelwork boxes are open-vocabulary candidates. Pole-top output is an unscored geometry search region. No multi-component accuracy is reported.</div>
 <section class="metrics">{''.join(f'<div class="metric"><small>{key.replace("_", " ")}</small><b>{value}</b></div>' for key,value in totals.items())}</section>
+<section class="panel" style="margin-top:14px"><h2>Observed output coverage — not accuracy</h2><p>Pole proposals appear on {images_with['pole']} / 9 images; crossarm proposals appear on {images_with['crossarm']} / 9. No image contains both, so pole-top abstains on all {output_audit['pole_top_abstentions']} images. The material gate emits a specific diagnostic candidate for {diagnostic_specific_materials} / {totals['material_diagnostics']} insulator proposals, while verified final specific materials remain {final_specific_materials}. Grounding DINO emits {totals['steelwork_candidates']} displayed steelwork candidates, with zero verified steelwork targets on this cohort.</p><p><b>Visual failure pattern:</b> duplicated pole boxes, sparse or incorrect crossarm boxes, and broad steelwork candidates remain visible in the gallery. Counts measure emitted outputs only; they do not measure correctness.</p></section>
 <div class="toolbar"><button id="prev">← Previous</button><select id="pick">{options}</select><button id="next">Next →</button><span id="counter"></span></div>
 <section class="panel"><h2 id="title"></h2><div id="meta"></div><div class="grid" id="grid"></div></section>
 <p><a href="../localisation_adaptation_v2/index.html">UK insulator v2 audit</a> · <a href="../material_prospective/index.html">Source-evidenced material audit</a> · <a href="../upgrade/index.html">Capability gap summary</a> · <a href="raw/results.json.txt">Raw run result</a> · <a href="verification.json">Build verification</a> · <a href="ui_qa.json">Browser QA</a></p>
@@ -333,10 +359,20 @@ def build(result_sha256, output=DEFAULT_OUT):
     if any("\u3400" <= character <= "\u9fff" for character in page):
         raise ValueError("Rendered UI is not English-only")
     (output / "index.html").write_text(page)
+    image_artifacts = sorted((output / "images").glob("*.jpg"))
+    raw_artifacts = sorted((output / "raw").glob("*.txt"))
+    if len(image_artifacts) != 36 or len(raw_artifacts) != 10:
+        raise ValueError("Expected 36 rendered panels and 10 copied raw JSON files")
+    artifact_sha256 = {
+        str(path.relative_to(output)): digest(path)
+        for path in [*image_artifacts, *raw_artifacts]
+    }
     verification = {"status": "VERIFIED", "language": "English", "gallery_images": len(gallery),
                     "panels": 4 * len(gallery), "result_sha256": result_sha256,
                     "source_predictions_rewritten": False, "reference_boxes_used": False,
                     "scores_presented_as_probabilities": False,
+                    "artifact_files": len(artifact_sha256),
+                    "artifact_sha256": artifact_sha256,
                     "data_sha256": digest(output / "data.json"),
                     "html_sha256": digest(output / "index.html")}
     write_json(output / "verification.json", verification)

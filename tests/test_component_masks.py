@@ -424,6 +424,9 @@ class ComponentMaskTests(unittest.TestCase):
         self.assertIn('steelwork candidate',source)
         self.assertIn('pole-top search region · unscored',source)
         self.assertNotIn("{prediction['raw_score']:.0%}",source)
+        self.assertIn('Observed output coverage — not accuracy',source)
+        self.assertIn('final_specific_materials',source)
+        self.assertIn('artifact_sha256',source)
 
     def test_multicomponent_report_rejects_truth_probability_and_count_promotion(self):
         record={

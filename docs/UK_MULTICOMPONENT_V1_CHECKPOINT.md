@@ -50,9 +50,42 @@ models.
 - Pole-top output is an unscored geometry search region, not a physical component detection.
 - No multi-component accuracy is computed on this cohort because the necessary truth is absent.
 
-## Not yet run
+## Completed fixed run — 2026-08-30
 
-No `gridsight-uk-multicomponent-v1` Slurm job was present or submitted at this
-checkpoint. The protocol permits one fixed-budget, inference-only gputest job
-after explicit user authorisation. It permits no gradient steps, automatic retry,
-threshold selection from UK v3, or follow-on tuning.
+- Slurm job: `958020`
+- State/exit: `COMPLETED`, `0:0`
+- GPU: NVIDIA GH200 120GB
+- Slurm elapsed time: 27 seconds
+- Recorded inference elapsed time: 6.736 seconds
+- Result SHA-256: `8955cad7b399c60680e27d68a93953ba1c04d775eb45e9b17656a5b9d2494ee9`
+- Result status: `COMPLETE_UNSCORED_MULTICOMPONENT_DIAGNOSTIC`
+- Gradient steps: 0
+- Reference boxes accessed or used: false
+- Multi-component accuracy computed: false
+- Automatic retry or follow-on tuning: none
+
+The strict English report builder verified the result pin, code snapshots,
+frozen choices, material feature tensor, all 18 Grounding DINO raw tensors,
+all nine record hashes, preserved v2 predictions and source-image hashes. It
+rendered 36 panels and integrated the report into 8772 only after those checks.
+
+### Observed outputs, not accuracy
+
+- 21 pole detections across 5 of 9 images
+- 5 crossarm detections on 1 of 9 images
+- 14 insulator detections across 7 of 9 images
+- 36 displayed steelwork candidates, with zero verified steelwork targets
+- 8 of 14 material diagnostics emitted a specific diagnostic candidate, while all 14 final material outputs remained `unknown`
+- 0 images contained both a pole and crossarm detection; all 9 pole-top outputs abstained
+
+Visual review shows duplicated pole boxes, sparse or incorrect crossarm boxes,
+and broad steelwork candidates that often cover a whole pole or background
+structure. This is a verified real-output overlay, but it remains well short of
+the supplied Keen AI result.
+
+Browser QA verified the nine-option selector, Previous/Next navigation and
+wraparound, loaded panels on the first and last images, English-only visible
+text, the 8772 parent link, desktop two-column layout and zero console warnings
+or errors. The browser report is:
+
+`http://127.0.0.1:8772/report/multicomponent_v1/index.html`
