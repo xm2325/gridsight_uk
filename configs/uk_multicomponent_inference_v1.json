@@ -1,0 +1,74 @@
+{
+  "protocol_id": "uk-multicomponent-inference-v1-20260830",
+  "run": "runs/uk_multicomponent/v1_20260830",
+  "source_dataset": "data/external/uk_insulator_localisation_v3",
+  "source_manifest_sha256": "d74f206e506c9c61303cdf20c092c44c107332cc3931ccf0f6a8079e68ac50ac",
+  "source_counts": {
+    "images": 9,
+    "asset_groups": 9,
+    "positive_reference_boxes_not_available_to_inference": 30,
+    "source_evidenced_hard_negatives": 2
+  },
+  "preserved_insulator_run": "runs/uk_insulator_adaptation/v2_20260830",
+  "preserved_insulator_result_sha256": "af25826dac56a24e57eda3713b5613c0df7eead7834cbd76b46934eaca55790b",
+  "component_detector": "runs/keen_components/epri_components_v1_20260827/training/weights/best.pt",
+  "component_detector_sha256": "3fc73e34dedc7d718e78ffcb289ceb8090a52cff95f37623d98cc07f7db58937",
+  "component_classes": ["pole", "crossarm", "insulator"],
+  "component_inference": {
+    "imgsz": 1280,
+    "raw_score_floor": 0.01,
+    "display_operating_score": 0.05,
+    "nms_iou": 0.5,
+    "max_det": 300,
+    "insulator_source": "preserved adapted_specialist full_plus_tiles predictions; no duplicate inference",
+    "pole_crossarm_source": "one full-frame EPRI component-detector pass"
+  },
+  "material_encoder": "weights/siglip2-base-naflex-b53b807",
+  "material_encoder_sha256": "ac5f28bbdf92c0c1696ccbd3ce716426049cd67ad8045b66d0d938b0f9c8bbec",
+  "material_config": "configs/material_head_v2.json",
+  "material_config_sha256": "329aa0365687d3ea9b105b49f5f5329ff45c739c741a51b80c03821a6a3f2e6d",
+  "material_head": "runs/material_head/v3_uk_prospective_20260830/adapted_head.npz",
+  "material_head_sha256": "b3432770172a3a24c2875025bc803cc510b6c5620ad864c9095cfddac7029e59",
+  "material_threshold_source": "runs/material_head/v3_uk_prospective_20260830/results.json",
+  "material_threshold_source_sha256": "f959a8a7ea8e1b6f476567b8a01833e88249ab50e8358a3becc605d56c10b6f5",
+  "material_policy": {
+    "classes": ["glass", "porcelain_ceramic", "polymer_composite", "other"],
+    "context_padding": 0.12,
+    "diagnostic_gate": "frozen adapted-head thresholds only",
+    "display_diagnostic_candidate": true,
+    "final_material": "unknown",
+    "final_reason": "The UK v3 source pages do not provide independent instance-level material evidence; a passing classifier gate remains an unverified diagnostic candidate.",
+    "scores_are_probabilities": false
+  },
+  "grounding_model": "weights/grounding-dino-base-12bdfa3",
+  "grounding_model_sha256": "5548f844c928c4b6f411fa8cbcc2bfa8dbbba437cb1d513975519f93c2a9ed21",
+  "steelwork": {
+    "target_definition": "Visible load-bearing metallic support assembly attached to a distribution pole; excludes conductors, insulator bodies, the pole shaft and isolated small fasteners.",
+    "queries": ["a metal crossarm support assembly.", "a metal support bracket on an electricity pole."],
+    "grounding_size": {"shortest_edge": 800, "longest_edge": 1333},
+    "raw_score_floor": 0.01,
+    "display_operating_score": 0.20,
+    "nms_iou": 0.5,
+    "final_label": "steelwork candidate",
+    "steel_composition_verified": false,
+    "evaluation_truth_available": false
+  },
+  "pole_top": {
+    "target_definition": "A deterministic search region around the elongated pole-box axis endpoint nearest a crossarm prediction.",
+    "requires": ["one elongated pole prediction", "one crossarm prediction", "unambiguous endpoint-to-crossarm association"],
+    "output_label": "pole-top search region",
+    "output_score": null,
+    "physical_component_verified": false,
+    "evaluation_truth_available": false
+  },
+  "output_contract": {
+    "pole_crossarm_insulator": "Model detections with raw uncalibrated operating scores and source-model identity.",
+    "material": "Frozen-head diagnostic candidate plus a separate final unknown state; never a fabricated percentage.",
+    "steelwork": "Open-vocabulary structural-metal candidate with composition_verified=false; not a steelwork truth label.",
+    "pole_top": "Derived geometry with score=null; not a trained detector or physical-component claim.",
+    "references": "The 30 v3 analyst boxes and hard-negative roles are unavailable to inference and are not written into model output records."
+  },
+  "evaluation": "Presentation and evidence-contract diagnostic only. No multi-component accuracy is computed because pole/crossarm, steelwork, pole-top and material truth are absent on this cohort.",
+  "claim_boundary": "This protocol can create a Keen-style multi-layer review overlay from real model outputs, but it cannot claim Keen-level performance, calibrated confidence, UK material accuracy, verified steel composition or physical pole-top detection.",
+  "budget": "One inference-only Roihu gputest job after explicit user authorisation. No gradient steps, no threshold/model selection, no use of v3 boxes, and no automatic retry or follow-on tuning."
+}

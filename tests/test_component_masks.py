@@ -24,6 +24,7 @@ from prepare_uk_insulator_adaptation_v1 import square_crop
 from prepare_uk_insulator_adaptation_v2 import crop_labels as crop_labels_v2
 from prepare_uk_insulator_adaptation_v2 import square_crop as square_crop_v2
 from prepare_uk_insulator_adaptation_v2 import verify_definitions as verify_adaptation_v2
+from roihu_uk_multicomponent_inference_v1 import box_pole_top_region
 from roihu_uk_insulator_localisation_v1 import axis_starts,fixed_priority_fusion,match_counts
 
 
@@ -364,6 +365,37 @@ class ComponentMaskTests(unittest.TestCase):
         upgrade=json.loads((report_root/'upgrade/data.json').read_text())
         self.assertEqual(upgrade['localisation_adaptation_v2']['adapted_specialist_full_plus_tiles']['tp'],7)
         self.assertIn('7 / 30',(report_root/'upgrade/index.html').read_text())
+
+    def test_multicomponent_protocol_separates_detections_candidates_and_unknown(self):
+        protocol=json.loads((ROOT/'configs/uk_multicomponent_inference_v1.json').read_text())
+        self.assertEqual(protocol['source_manifest_sha256'],
+                         'd74f206e506c9c61303cdf20c092c44c107332cc3931ccf0f6a8079e68ac50ac')
+        self.assertEqual(protocol['preserved_insulator_result_sha256'],
+                         'af25826dac56a24e57eda3713b5613c0df7eead7834cbd76b46934eaca55790b')
+        self.assertEqual(protocol['material_policy']['final_material'],'unknown')
+        self.assertFalse(protocol['material_policy']['scores_are_probabilities'])
+        self.assertEqual(protocol['steelwork']['final_label'],'steelwork candidate')
+        self.assertFalse(protocol['steelwork']['steel_composition_verified'])
+        self.assertIsNone(protocol['pole_top']['output_score'])
+        self.assertFalse(protocol['pole_top']['physical_component_verified'])
+        self.assertIn('No gradient steps',protocol['budget'])
+        source=(ROOT/'scripts/roihu_uk_multicomponent_inference_v1.py').read_text()
+        self.assertNotIn('.train(',source)
+        self.assertNotIn('record["boxes"]',source)
+        self.assertNotIn("record['boxes']",source)
+        self.assertIn('v3_reference_boxes_accessed_or_used',source)
+
+    def test_box_pole_top_region_abstains_or_returns_unscored_geometry(self):
+        pole={'xyxy':[90,40,110,300],'raw_score':.7}
+        crossarm={'xyxy':[40,30,160,60],'raw_score':.6}
+        result=box_pole_top_region([pole],[crossarm],400,400)
+        self.assertEqual(result['status'],'geometry_candidate')
+        self.assertIsNone(result['score'])
+        self.assertFalse(result['physical_component_verified'])
+        self.assertTrue(0 <= result['xyxy'][0] < result['xyxy'][2] <= 400)
+        self.assertTrue(0 <= result['xyxy'][1] < result['xyxy'][3] <= 400)
+        self.assertEqual(box_pole_top_region([{'xyxy':[90,40,110,300]}],[],400,400)['status'],'unknown')
+        self.assertEqual(box_pole_top_region([{'xyxy':[50,50,160,140]}],[crossarm],400,400)['status'],'unknown')
 
 
 if __name__=='__main__':unittest.main()
