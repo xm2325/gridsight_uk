@@ -15,6 +15,8 @@ from sample_mpid_units import choose
 from prepare_ttpla_steelwork_demo import yolo_lines
 from acquire_uk_material_prospective_v1 import SOURCES as PROSPECTIVE_MATERIAL_SOURCES
 from roihu_uk_material_prospective_v1 import asset_counts,greedy_matches
+from acquire_uk_insulator_localisation_v1 import SOURCES as LOCALISATION_SOURCES
+from roihu_uk_insulator_localisation_v1 import axis_starts,fixed_priority_fusion,match_counts
 
 
 class ComponentMaskTests(unittest.TestCase):
@@ -187,6 +189,28 @@ class ComponentMaskTests(unittest.TestCase):
         self.assertEqual(len(report['gallery']),5)
         self.assertFalse(report['reference_regions_are_expert_ground_truth'])
         self.assertFalse(report['uk_population_accuracy_claim'])
+
+    def test_uk_localisation_acceptance_is_frozen_and_grouped(self):
+        accepted=[r for r in LOCALISATION_SOURCES if r['role'] in {'prospective_test','hard_negative'}]
+        self.assertEqual(len(accepted),8)
+        self.assertEqual(sum(len(r['boxes']) for r in accepted),40)
+        self.assertEqual(len({r['asset_group'] for r in accepted}),7)
+        self.assertEqual(sum(r['role']=='hard_negative' for r in accepted),1)
+        self.assertTrue(all(r['exclusion_reason'] for r in LOCALISATION_SOURCES if r['role']=='excluded'))
+        protocol=json.loads((ROOT/'configs/uk_insulator_localisation_prospective_v1.json').read_text())
+        self.assertEqual(protocol['operating_scores'],[.05,.25])
+        self.assertEqual(protocol['evaluation_ious'],[.3,.5])
+        self.assertIn('not UK material claims',protocol['claim_boundary'])
+
+    def test_localisation_tiling_matching_and_fusion_are_deterministic(self):
+        self.assertEqual(axis_starts(640,320,.25),[0,240,320])
+        epri=[{'xyxy':[0,0,10,10],'raw_score':.1,'source_model':'epri'}]
+        mpid=[{'xyxy':[1,0,11,10],'raw_score':.99,'source_model':'mpid'},
+              {'xyxy':[20,0,30,10],'raw_score':.2,'source_model':'mpid'}]
+        fused=fixed_priority_fusion(epri,mpid,.5)
+        self.assertEqual([p['source_model'] for p in fused],['epri','mpid'])
+        counts=match_counts(fused,[[0,0,10,10],[20,0,30,10]],.3)
+        self.assertEqual((counts['tp'],counts['fp'],counts['fn']),(2,0,0))
 
 
 if __name__=='__main__':unittest.main()
