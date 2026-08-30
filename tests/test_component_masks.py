@@ -212,5 +212,22 @@ class ComponentMaskTests(unittest.TestCase):
         counts=match_counts(fused,[[0,0,10,10],[20,0,30,10]],.3)
         self.assertEqual((counts['tp'],counts['fp'],counts['fn']),(2,0,0))
 
+    def test_uk_localisation_result_preserves_failures_and_claim_boundary(self):
+        result_path=ROOT/'runs/uk_insulator_localisation/v1_20260830/results.json'
+        report_path=ROOT/'runs/uk_capabilities/v3_20260827/report/localisation_prospective/data.json'
+        if not result_path.exists() or not report_path.exists():
+            self.skipTest('Optional prospective localisation output is not in the source release')
+        result=json.loads(result_path.read_text());report=json.loads(report_path.read_text())
+        self.assertEqual(result['status'],'COMPLETE')
+        self.assertEqual(result['integrity']['training_or_parameter_updates'],0)
+        self.assertFalse(result['integrity']['thresholds_selected_from_acceptance_results'])
+        self.assertFalse(result['integrity']['mpid_material_classes_scored_as_uk_material_truth'])
+        primary={name:result['metrics'][name]['0.05']['0.3'] for name in result['protocol']['arms']}
+        self.assertEqual((primary['epri_full']['tp'],primary['epri_full']['fp']),(1,0))
+        self.assertEqual((primary['epri_full_plus_tiles']['tp'],primary['epri_full_plus_tiles']['fp']),(2,0))
+        self.assertEqual((primary['proposal_fusion']['tp'],primary['proposal_fusion']['fp']),(4,22))
+        self.assertEqual(len(report['gallery']),8)
+        self.assertIn('Target-domain supervised localisation is required',report['conclusion'])
+
 
 if __name__=='__main__':unittest.main()
