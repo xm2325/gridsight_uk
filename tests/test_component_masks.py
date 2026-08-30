@@ -339,5 +339,31 @@ class ComponentMaskTests(unittest.TestCase):
         self.assertEqual(len(report['gallery']),5)
         self.assertIn('not yet Keen-style',report['conclusion'])
 
+    def test_uk_adaptation_v2_result_and_english_report_preserve_failures(self):
+        result_path=ROOT/'runs/uk_insulator_adaptation/v2_20260830/results.json'
+        report_root=ROOT/'runs/uk_capabilities/v3_20260827/report'
+        report_path=report_root/'localisation_adaptation_v2/data.json'
+        if not result_path.exists() or not report_path.exists():
+            self.skipTest('Optional UK adaptation v2 output is not in the source release')
+        result=json.loads(result_path.read_text());report=json.loads(report_path.read_text())
+        self.assertEqual(result['status'],'COMPLETE')
+        self.assertEqual(result['runtime']['slurm_job_id'],'952221')
+        self.assertEqual(result['training_progress']['completed_epochs'],8)
+        self.assertFalse(result['integrity']['acceptance_used_for_training_or_checkpoint_selection'])
+        self.assertFalse(result['integrity']['thresholds_selected_from_acceptance_results'])
+        self.assertEqual(result['integrity']['acceptance_inference_passes_per_checkpoint'],1)
+        baseline=result['metrics']['baseline_v1_adapted_full_plus_tiles']['0.05']['0.3']
+        adapted=result['metrics']['adapted_specialist_full_plus_tiles']['0.05']['0.3']
+        self.assertEqual((baseline['tp'],baseline['fp'],baseline['fn']),(5,6,25))
+        self.assertEqual((adapted['tp'],adapted['fp'],adapted['fn']),(7,7,23))
+        self.assertEqual(sum(row['fp'] for row in adapted['per_image'] if row['role']=='hard_negative'),6)
+        self.assertEqual(len(report['gallery']),9)
+        self.assertIn('not yet Keen-style',report['conclusion'])
+        self.assertFalse(any('\u3400' <= char <= '\u9fff' for char in
+                             (report_root/'localisation_adaptation_v2/index.html').read_text()))
+        upgrade=json.loads((report_root/'upgrade/data.json').read_text())
+        self.assertEqual(upgrade['localisation_adaptation_v2']['adapted_specialist_full_plus_tiles']['tp'],7)
+        self.assertIn('7 / 30',(report_root/'upgrade/index.html').read_text())
+
 
 if __name__=='__main__':unittest.main()
