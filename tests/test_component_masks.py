@@ -27,7 +27,7 @@ from prepare_uk_insulator_adaptation_v2 import square_crop as square_crop_v2
 from prepare_uk_insulator_adaptation_v2 import verify_definitions as verify_adaptation_v2
 from roihu_uk_multicomponent_inference_v1 import box_pole_top_region
 from build_uk_multicomponent_report_v1 import render_panel as render_multicomponent_panel
-from build_uk_multicomponent_report_v1 import validate_record_contract
+from build_uk_multicomponent_report_v1 import integrate_parent_report,validate_record_contract
 from roihu_uk_insulator_localisation_v1 import axis_starts,fixed_priority_fusion,match_counts
 
 
@@ -491,6 +491,42 @@ class ComponentMaskTests(unittest.TestCase):
         self.assertNotIn('.innerHTML',source)
         self.assertIn('meta.replaceChildren',source)
         self.assertIn('result["protocol"] != protocol',source)
+
+    def test_multicomponent_parent_link_appears_only_for_verified_unscored_report(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);parent=root/'report';output=parent/'multicomponent_v1'
+            output.mkdir(parents=True)
+            data={'status':'COMPLETE_UNSCORED_MULTICOMPONENT_DIAGNOSTIC',
+                  'result_sha256':'a'*64,'performance_metrics':None,
+                  'totals':{'pole':2,'crossarm':3,'insulator':4,
+                            'material_diagnostics':4,'steelwork_candidates':5,
+                            'pole_top_regions':1}}
+            verification={'status':'VERIFIED','result_sha256':'a'*64,
+                          'scores_presented_as_probabilities':False,
+                          'reference_boxes_used':False}
+            (output/'data.json').write_text(json.dumps(data))
+            (output/'verification.json').write_text(json.dumps(verification))
+            (parent/'data.json').write_text(json.dumps({
+                'schema':'gridsight-uk-review-v3','verified_extensions':{}}))
+            (parent/'verification.json').write_text(json.dumps({
+                'status':'VERIFIED_V3_RAW_TENSORS_CROPS_AND_ENGLISH_UI'}))
+            template=root/'parent.html'
+            template.write_text('<!doctype html><html lang="en-GB">__DATA_JSON__</html>')
+            extension=integrate_parent_report(data,verification,output,parent,template)
+            self.assertEqual(extension['performance_metrics'],None)
+            self.assertEqual(extension['totals']['insulator'],4)
+            rendered=(parent/'index.html').read_text()
+            self.assertNotIn('__DATA_JSON__',rendered)
+            saved=json.loads((parent/'data.json').read_text())
+            self.assertEqual(saved['verified_extensions']['multicomponent'],extension)
+            audit=json.loads((parent/'verification.json').read_text())
+            self.assertFalse(audit['multicomponent_extension']['reference_boxes_used'])
+            self.assertFalse(audit['multicomponent_extension']['scores_presented_as_probabilities'])
+            integrate_parent_report(data,verification,output,parent,template)
+            unsafe=deepcopy(data);unsafe['performance_metrics']={'precision':1.0}
+            (output/'data.json').write_text(json.dumps(unsafe))
+            with self.assertRaisesRegex(ValueError,'not safe'):
+                integrate_parent_report(unsafe,verification,output,parent,template)
 
 
 if __name__=='__main__':unittest.main()

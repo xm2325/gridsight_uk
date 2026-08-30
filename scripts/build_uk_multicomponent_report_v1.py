@@ -17,6 +17,8 @@ from prepare_keen_components import ROOT, digest, write_json
 RUN = ROOT / "runs/uk_multicomponent/v1_20260830"
 DEFAULT_OUT = ROOT / "runs/uk_capabilities/v3_20260827/report/multicomponent_v1"
 PROTOCOL = ROOT / "configs/uk_multicomponent_inference_v1.json"
+PARENT_REPORT = ROOT / "runs/uk_capabilities/v3_20260827/report"
+PARENT_TEMPLATE = ROOT / "templates/uk_component_review_v3.html"
 COLOURS = {"pole": "#3b82f6", "crossarm": "#22c55e", "insulator": "#d946ef",
            "steelwork": "#f97316", "pole_top": "#facc15", "unknown": "#e5e7eb"}
 
@@ -138,6 +140,69 @@ def validate_record_contract(result_record, record):
     if result_record["counts"] != actual_counts:
         raise ValueError("Reported component totals do not match the raw record")
     return actual_counts
+
+
+def integrate_parent_report(data, verification, output, parent_report=PARENT_REPORT,
+                            parent_template=PARENT_TEMPLATE):
+    """Expose the extension only after its pinned report has passed validation."""
+    output, parent_report = Path(output), Path(parent_report)
+    if output.resolve().parent != parent_report.resolve() or output.name != "multicomponent_v1":
+        raise ValueError("Multi-component output is outside the expected parent report")
+    if (data["performance_metrics"] is not None or
+            verification["status"] != "VERIFIED" or
+            verification["result_sha256"] != data["result_sha256"] or
+            verification["scores_presented_as_probabilities"] is not False or
+            verification["reference_boxes_used"] is not False):
+        raise ValueError("Multi-component report is not safe to expose from the parent")
+    report_data_path = output / "data.json"
+    report_verification_path = output / "verification.json"
+    if (load(report_data_path) != data or load(report_verification_path) != verification):
+        raise ValueError("Multi-component files differ from the verified build payload")
+
+    parent_data_path = parent_report / "data.json"
+    parent_index_path = parent_report / "index.html"
+    parent_verification_path = parent_report / "verification.json"
+    parent_data = load(parent_data_path)
+    parent_verification = load(parent_verification_path)
+    if (parent_data.get("schema") != "gridsight-uk-review-v3" or
+            parent_verification.get("status") != "VERIFIED_V3_RAW_TENSORS_CROPS_AND_ENGLISH_UI"):
+        raise ValueError("Unexpected parent report contract")
+    extension = {
+        "status": data["status"],
+        "report": "multicomponent_v1/index.html",
+        "verification": "multicomponent_v1/verification.json",
+        "result_sha256": data["result_sha256"],
+        "performance_metrics": None,
+        "totals": data["totals"],
+        "material_output": "unknown",
+        "steelwork_output": "candidate",
+        "pole_top_output": "unscored search region",
+    }
+    previous = parent_data.setdefault("verified_extensions", {}).get("multicomponent")
+    if previous is not None and previous != extension:
+        raise ValueError("A different multi-component result is already integrated")
+    parent_data["verified_extensions"]["multicomponent"] = extension
+    template = Path(parent_template).read_text()
+    page = template.replace("__DATA_JSON__", json.dumps(
+        parent_data, ensure_ascii=True, allow_nan=False,
+        separators=(",", ":")).replace("<", "\\u003c"))
+    if "__DATA_JSON__" in page or any("\u3400" <= character <= "\u9fff" for character in page):
+        raise ValueError("Parent report did not render as an English page")
+    write_json(parent_data_path, parent_data)
+    parent_index_path.write_text(page)
+    parent_verification["multicomponent_extension"] = {
+        "result_sha256": data["result_sha256"],
+        "report_data_sha256": digest(report_data_path),
+        "report_verification_sha256": digest(report_verification_path),
+        "performance_metrics": None,
+        "reference_boxes_used": False,
+        "scores_presented_as_probabilities": False,
+    }
+    parent_verification["template_sha256"] = digest(parent_template)
+    parent_verification["data_sha256"] = digest(parent_data_path)
+    parent_verification["html_sha256"] = digest(parent_index_path)
+    write_json(parent_verification_path, parent_verification)
+    return extension
 
 
 def render_panel(image, record, panel, target):
@@ -275,6 +340,7 @@ def build(result_sha256, output=DEFAULT_OUT):
                     "data_sha256": digest(output / "data.json"),
                     "html_sha256": digest(output / "index.html")}
     write_json(output / "verification.json", verification)
+    integrate_parent_report(data, verification, output)
     return data, verification
 
 
