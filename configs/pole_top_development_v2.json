@@ -1,0 +1,27 @@
+{
+  "protocol_id": "pole-top-development-v2-20260831",
+  "input_run": "runs/crossarm_association/v2_20260831",
+  "input_result_sha256": "1f3094c5cd85d79bbf9804176d0714e4eef8ff9bfe9066e3684a4a343d98949d",
+  "source_dataset": "data/external/uk_distribution_pilot_v1",
+  "source_manifest_sha256": "fcb4c41d8379bc3c4eab0e7e6c7a099af1d2ec6b533bcc5953d15816ed59d171",
+  "target": "A deterministic search region centred on a guarded crossarm near the upper endpoint of one upright pole. It is not an annotated physical pole-top component.",
+  "geometry": {
+    "minimum_pole_height_over_width": 1.5,
+    "maximum_crossarm_centre_relative_to_pole_top": 0.55,
+    "crossarm_horizontal_padding_fraction": 0.15,
+    "maximum_near_endpoint_distance_over_pole_height": 0.45,
+    "minimum_far_to_near_distance_ratio": 1.5,
+    "minimum_far_minus_near_over_pole_height": 0.15,
+    "region_pole_width_multiplier": 1.5,
+    "region_crossarm_extent_multiplier": 1.5,
+    "region_minimum_image_fraction": 0.05,
+    "ambiguity_margin_over_pole_height": 0.1
+  },
+  "uk_development_images": 27,
+  "uk_ground_truth_status": "NONE",
+  "uk_v3_accessed": false,
+  "model_inference": false,
+  "run": "runs/pole_top_development/v2_20260831",
+  "budget": "One deterministic geometry pass over pinned development records. No model inference, training, UK v3 access or retry.",
+  "claim_boundary": "Every output is an unscored search region. It is not a pole-top detection, confidence, accuracy result or verified physical component."
+}
