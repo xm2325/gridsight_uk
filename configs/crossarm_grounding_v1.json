@@ -1,0 +1,48 @@
+{
+  "protocol_id": "crossarm-grounding-v1-20260831",
+  "authorization": "User authorised bounded follow-on inference experiments intended to improve CV performance.",
+  "epri_dataset": "data/external/epri_components_v1",
+  "epri_manifest_sha256": "56e0517fcbf864f6c60aa1e2b0869cf9061138a32eb2b2acd40ad37efcb8cffa",
+  "epri_selection_split": "dev",
+  "epri_selection_circuit": 4,
+  "epri_selection_images": 80,
+  "component_baseline_run": "runs/keen_components/epri_components_v1_20260827",
+  "component_baseline_result_sha256": "d5bc2d70c50a23ed483b8c2378b4d8e0e49d264193314c1c9f828d6122d44a07",
+  "grounding_model": "weights/grounding-dino-base-12bdfa3",
+  "grounding_model_sha256": "5548f844c928c4b6f411fa8cbcc2bfa8dbbba437cb1d513975519f93c2a9ed21",
+  "prompts": [
+    "a crossarm on an electricity distribution pole.",
+    "a horizontal crossarm carrying electrical insulators.",
+    "the top support beam of a wooden utility pole.",
+    "a metal or wooden support arm attached across an electricity pole."
+  ],
+  "grounding_size": {"shortest_edge": 800, "longest_edge": 1333},
+  "raw_score_floor": 0.01,
+  "nms_iou": 0.5,
+  "selection": {
+    "score_candidates": [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5],
+    "variants": ["raw", "pole_associated"],
+    "iou": 0.5,
+    "objective": "maximum EPRI circuit-4 crossarm F1; ties use precision, higher threshold, pole_associated, then prompt order",
+    "pole_score_threshold": 0.05,
+    "pole_min_area_containment_threshold": 0.5,
+    "pole_association": {
+      "pole_centre_horizontal_candidate_padding": 0.15,
+      "candidate_centre_min_relative_to_pole_top": -0.25,
+      "candidate_centre_max_relative_to_pole_top": 0.55,
+      "minimum_candidate_width_over_pole_width": 0.5,
+      "maximum_candidate_height_over_pole_height": 0.8
+    }
+  },
+  "uk_development": {
+    "dataset": "data/external/uk_distribution_pilot_v1",
+    "manifest_sha256": "fcb4c41d8379bc3c4eab0e7e6c7a099af1d2ec6b533bcc5953d15816ed59d171",
+    "images": 27,
+    "ground_truth_status": "NONE",
+    "use": "qualitative proposal audit after EPRI choices are frozen; no threshold or prompt selection and no accuracy"
+  },
+  "uk_v3_acceptance_used": false,
+  "run": "runs/crossarm_grounding/v1_20260831",
+  "budget": "One Roihu gputest inference job: four prompts on 80 EPRI development images, then only the selected frozen arm on 27 UK development images. No training, UK v3 access, retry or sweep beyond the listed grid.",
+  "claim_boundary": "Grounding DINO values are raw uncalibrated scores. UK outputs are machine proposals, not reference truth, crossarm accuracy, steel composition or deployment evidence."
+}
