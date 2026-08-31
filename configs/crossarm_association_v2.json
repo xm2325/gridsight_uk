@@ -1,0 +1,36 @@
+{
+  "protocol_id": "crossarm-association-v2-20260831",
+  "authorization": "User authorised bounded follow-on experiments intended to improve CV performance.",
+  "input_run": "runs/crossarm_grounding/v1_20260831",
+  "input_result_sha256": "0c9424dc9571dc37fc54c6036413e4f803587c3690a70cf351b820d606a28421",
+  "input_frozen_choices_sha256": "2794a62b09f8b17ca7d5d396de8f7324b58d1e77177b34874e1217784213de31",
+  "input_prompt_index": 2,
+  "input_prompt": "the top support beam of a wooden utility pole.",
+  "input_raw_threshold": 0.3,
+  "rules": {
+    "pole_centre_horizontal_candidate_padding": 0.15,
+    "candidate_centre_min_relative_to_pole_top": -0.25,
+    "candidate_centre_max_relative_to_pole_top": 0.55,
+    "minimum_candidate_width_over_pole_width": 0.5,
+    "maximum_candidate_height_over_pole_height": 0.45,
+    "minimum_pole_height_over_width": 1.5,
+    "maximum_candidate_centre_offset_over_pole_width": 1.5
+  },
+  "rule_origin": "Fixed after the UK-development v1 morphology failure audit: reject non-upright pole inputs and candidate boxes that extend too far down a pole shaft. This is a development guardrail, not an independent UK evaluation.",
+  "epri_check": {
+    "dataset": "EPRI circuit 4 publisher truth already embedded in the pinned input records",
+    "images": 80,
+    "iou": 0.5,
+    "purpose": "Measure the precision/recall cost of the fixed guardrail; no rule selection."
+  },
+  "uk_development": {
+    "images": 27,
+    "ground_truth_status": "NONE",
+    "purpose": "Apply the fixed guardrail to pinned raw model outputs; proposal audit only, no accuracy."
+  },
+  "uk_v3_accessed": false,
+  "model_inference": false,
+  "run": "runs/crossarm_association/v2_20260831",
+  "budget": "One deterministic post-processing pass over pinned records. No model inference, training, UK v3 access, threshold sweep or automatic retry.",
+  "claim_boundary": "The guardrail can remove morphologically invalid proposals but cannot establish UK accuracy or recall. Scores remain raw uncalibrated Grounding DINO values."
+}
