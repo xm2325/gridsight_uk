@@ -1,0 +1,95 @@
+{
+  "protocol_id": "epri-crossarm-specialist-v2-20260831",
+  "authorization": "User explicitly authorised bounded follow-on training and inference intended to improve CV performance.",
+  "source_dataset": "data/external/epri_components_v1",
+  "source_manifest_sha256": "56e0517fcbf864f6c60aa1e2b0869cf9061138a32eb2b2acd40ad37efcb8cffa",
+  "derived_dataset": "data/external/epri_crossarm_specialist_v2",
+  "class": "crossarm",
+  "class_id": 0,
+  "split_policy": {
+    "train_circuits": [1, 2, 3, 6],
+    "development_circuit": [4],
+    "evaluation_circuits": [5, 7],
+    "evaluation_used_for_selection": false,
+    "uk_used_for_selection": false
+  },
+  "sampling": {
+    "train_unique_images": 320,
+    "train_positive_images": 78,
+    "train_negative_images": 242,
+    "positive_repeat_copies": 2,
+    "train_samples_after_repetition": 476,
+    "development_unique_images": 80,
+    "evaluation_unique_images": 100,
+    "reason": "Raise crossarm-positive exposure while retaining every frozen EPRI training image as a hard/background negative. Repetition is training-only and never counted as independent data."
+  },
+  "initial_checkpoint": "runs/keen_components/epri_components_v1_20260827/training/weights/best.pt",
+  "initial_checkpoint_sha256": "3fc73e34dedc7d718e78ffcb289ceb8090a52cff95f37623d98cc07f7db58937",
+  "detection_yaml": "yoloe-26m.yaml",
+  "baseline_result": "runs/keen_components/epri_components_v1_20260827/results.json",
+  "baseline_result_sha256": "d5bc2d70c50a23ed483b8c2378b4d8e0e49d264193314c1c9f828d6122d44a07",
+  "baseline_prediction_root": "runs/keen_components/epri_components_v1_20260827",
+  "training": {
+    "epochs": 40,
+    "imgsz": 1280,
+    "batch": 8,
+    "nbs": 8,
+    "optimizer": "AdamW",
+    "lr0": 0.00025,
+    "lrf": 0.1,
+    "weight_decay": 0.0005,
+    "warmup_epochs": 1.0,
+    "seed": 31,
+    "workers": 12,
+    "amp": false,
+    "freeze": 0,
+    "cache": false,
+    "mosaic": 0.0,
+    "mixup": 0.0,
+    "copy_paste": 0.0,
+    "translate": 0.05,
+    "scale": 0.2,
+    "fliplr": 0.5,
+    "hsv_h": 0.015,
+    "hsv_s": 0.3,
+    "hsv_v": 0.2,
+    "trainer": "YOLOEPETrainer",
+    "checkpoint_selection": "library best checkpoint from EPRI circuit 4 development fitness only"
+  },
+  "inference": {
+    "imgsz": 1280,
+    "raw_score_floor": 0.001,
+    "nms_iou": 0.5,
+    "max_det": 300,
+    "full_frame_only": true,
+    "manual_roi_used": false
+  },
+  "development_selection": {
+    "score_candidates": [0.01, 0.025, 0.05, 0.1, 0.15, 0.2, 0.25],
+    "objective": "maximum crossarm F1 at IoU 0.5; ties choose the higher score threshold",
+    "pole_min_area_containment_threshold": 0.5,
+    "pole_threshold_source": "Fixed after a bounded EPRI circuit 4 development comparison over [0.5,0.6,0.7,0.8,0.9]; never selected on EPRI eval or UK."
+  },
+  "frozen_evaluation": {
+    "iou": 0.5,
+    "ap_ious": [0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95],
+    "evaluation_passes_per_checkpoint": 1,
+    "uk_acceptance_passes_per_checkpoint": 1
+  },
+  "uk_acceptance": {
+    "dataset": "data/external/uk_insulator_localisation_v3",
+    "manifest_sha256": "d74f206e506c9c61303cdf20c092c44c107332cc3931ccf0f6a8079e68ac50ac",
+    "images": 9,
+    "asset_groups": 9,
+    "reference_boxes_available_to_model_or_selection": false,
+    "purpose": "one frozen transfer inference after all EPRI choices are fixed; proposal coverage only, never UK accuracy"
+  },
+  "run": "runs/epri_crossarm_specialist/v2_20260831",
+  "budget": "One 40-epoch specialist training and one frozen inference pass on EPRI dev, EPRI eval and UK v3 in one Roihu gputest job. No retry, sweep or UK tuning.",
+  "unsupported_claims": [
+    "UK crossarm accuracy",
+    "steel composition",
+    "physical pole-top detection",
+    "calibrated probabilities"
+  ]
+}
